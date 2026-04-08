@@ -1,0 +1,1641 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>TSP — Travelling Salesman Problem</title>
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,500;0,600;1,400;1,500&family=Outfit:wght@300;400;500;600&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet"/>
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --teal:#1d4a47;
+  --teal-mid:#2a6460;
+  --teal-light:#3d8b82;
+  --gold:#c9a84c;
+  --gold-light:#e8c97a;
+  --cream:#faf8f4;
+  --cream2:#f3f0ea;
+  --cream3:#e8e3d8;
+  --white:#ffffff;
+  --ink:#1a1a18;
+  --ink2:#3d3d38;
+  --ink3:#7a7a72;
+  --ink4:#b0afa6;
+  --rule:rgba(0,0,0,0.07);
+  --rule2:rgba(0,0,0,0.12);
+  --r:12px;
+  --fs:15px;
+  --mono:'JetBrains Mono',monospace;
+  --sans:'Outfit',sans-serif;
+  --serif:'Cormorant Garamond',serif;
+  --ok:#15803d;--ok-lt:rgba(21,128,61,0.08);
+  --bad:#dc2626;--bad-lt:rgba(220,38,38,0.08);
+  --warn:#d97706;
+  --hi:#1d4ed8;--hi-lt:rgba(29,78,216,0.08);--hi-md:rgba(29,78,216,0.18);
+}
+html{background:var(--cream);color:var(--ink);font-family:var(--sans);font-size:var(--fs);scroll-behavior:smooth}
+body{min-height:100vh}
+
+/* ── NAV ── */
+nav{
+  position:sticky;top:0;z-index:50;
+  background:rgba(29,74,71,0.97);backdrop-filter:blur(16px);
+  display:flex;align-items:center;gap:0;
+  padding:0 52px;height:60px;
+}
+.nav-logo{
+  font-family:var(--serif);font-size:20px;font-weight:500;
+  color:#fff;text-decoration:none;margin-right:auto;letter-spacing:.04em;
+  display:flex;align-items:center;gap:10px;
+}
+.nav-logo-mark{
+  width:28px;height:28px;border:1.5px solid rgba(201,168,76,0.7);
+  border-radius:6px;display:flex;align-items:center;justify-content:center;
+  font-size:13px;color:var(--gold);font-family:var(--mono);font-weight:500;
+}
+.nav-links{display:flex;gap:0}
+.nav-link{
+  font-size:12px;font-weight:400;letter-spacing:.06em;text-transform:uppercase;
+  color:rgba(255,255,255,0.55);text-decoration:none;padding:0 20px;height:60px;
+  display:flex;align-items:center;border-bottom:2px solid transparent;
+  transition:color .2s,border-color .2s;
+}
+.nav-link:hover{color:rgba(255,255,255,0.85)}
+.nav-link.active{color:#fff;border-bottom-color:var(--gold)}
+.nav-cta{
+  margin-left:12px;background:var(--gold);color:var(--teal);
+  font-family:var(--sans);font-size:12px;font-weight:600;letter-spacing:.05em;text-transform:uppercase;
+  border:none;border-radius:6px;padding:9px 18px;cursor:pointer;
+  transition:background .15s,transform .12s;text-decoration:none;display:flex;align-items:center;
+}
+.nav-cta:hover{background:var(--gold-light);transform:translateY(-1px)}
+
+/* ── HERO ── */
+.hero{
+  background:linear-gradient(155deg, var(--teal) 0%, var(--teal-mid) 55%, #1a3d3a 100%);
+  padding:80px 52px 72px;
+  position:relative;overflow:hidden;
+}
+.hero::before{
+  content:'';position:absolute;inset:0;
+  background:url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='%23ffffff' fill-opacity='0.025'%3E%3Ccircle cx='30' cy='30' r='1'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E");
+  pointer-events:none;
+}
+.hero::after{
+  content:'';position:absolute;right:-80px;top:-80px;
+  width:400px;height:400px;border-radius:50%;
+  background:radial-gradient(circle, rgba(201,168,76,0.12) 0%, transparent 70%);
+  pointer-events:none;
+}
+.hero-inner{max-width:1120px;margin:0 auto;position:relative;z-index:1}
+.hero-tag{
+  display:inline-flex;align-items:center;gap:8px;
+  font-family:var(--mono);font-size:10px;letter-spacing:.14em;text-transform:uppercase;
+  color:var(--gold);margin-bottom:20px;
+  background:rgba(201,168,76,0.1);border:1px solid rgba(201,168,76,0.25);
+  border-radius:20px;padding:5px 14px;
+}
+.hero-tag::before{content:'';width:5px;height:5px;border-radius:50%;background:var(--gold);display:inline-block}
+.hero-grid{display:grid;grid-template-columns:1fr 1fr;gap:48px;align-items:center}
+@media(max-width:820px){.hero-grid{grid-template-columns:1fr}}
+.hero-h1{font-family:var(--serif);font-size:clamp(38px,5.5vw,64px);font-weight:500;line-height:1.08;letter-spacing:-.01em;color:#fff;margin-bottom:20px}
+.hero-h1 em{font-style:italic;color:var(--gold)}
+.hero-sub{font-size:15px;color:rgba(255,255,255,0.65);line-height:1.75;max-width:420px;margin-bottom:32px}
+.hero-actions{display:flex;align-items:center;gap:14px;flex-wrap:wrap}
+.hero-btn{
+  font-family:var(--sans);font-size:13px;font-weight:600;letter-spacing:.04em;
+  border-radius:8px;padding:12px 24px;cursor:pointer;
+  display:inline-flex;align-items:center;gap:8px;transition:all .15s;border:none;text-decoration:none;
+}
+.hero-btn-primary{background:var(--gold);color:var(--teal)}
+.hero-btn-primary:hover{background:var(--gold-light);transform:translateY(-2px);box-shadow:0 8px 24px rgba(201,168,76,0.3)}
+.hero-btn-ghost{background:transparent;color:rgba(255,255,255,0.75);border:1.5px solid rgba(255,255,255,0.2)}
+.hero-btn-ghost:hover{border-color:rgba(255,255,255,0.5);color:#fff}
+.hero-stats{display:flex;gap:28px;margin-top:40px;padding-top:32px;border-top:1px solid rgba(255,255,255,0.1)}
+.h-stat .hs-val{font-family:var(--serif);font-size:30px;font-weight:600;color:#fff;line-height:1}
+.h-stat .hs-label{font-size:11px;color:rgba(255,255,255,0.45);font-family:var(--mono);letter-spacing:.06em;margin-top:4px;text-transform:uppercase}
+.hero-canvas-wrap{background:rgba(255,255,255,0.06);border:1px solid rgba(255,255,255,0.12);border-radius:16px;overflow:hidden;backdrop-filter:blur(8px);box-shadow:0 24px 64px rgba(0,0,0,0.25)}
+.hero-canvas-bar{display:flex;align-items:center;justify-content:space-between;padding:12px 16px;border-bottom:1px solid rgba(255,255,255,0.08);background:rgba(0,0,0,0.15)}
+.hcb-dots{display:flex;gap:6px}
+.hcb-dot{width:10px;height:10px;border-radius:50%}
+.hcb-title{font-family:var(--mono);font-size:10px;color:rgba(255,255,255,0.35);letter-spacing:.08em}
+.hero-canvas-inner{padding:4px}
+.hero-features{display:flex;gap:10px;flex-wrap:wrap;margin-top:24px}
+.h-feat{display:flex;align-items:center;gap:6px;background:rgba(255,255,255,0.07);border:1px solid rgba(255,255,255,0.1);border-radius:20px;padding:6px 14px;font-size:12px;color:rgba(255,255,255,0.65)}
+.h-feat-icon{font-size:14px}
+
+/* ── MAIN ── */
+.page-body{max-width:1120px;margin:0 auto;padding:0 52px}
+@media(max-width:700px){.page-body{padding:0 24px}}
+.section{padding:72px 0}
+.section+.section{border-top:1px solid var(--rule)}
+.section-eyebrow{font-family:var(--mono);font-size:10px;letter-spacing:.14em;text-transform:uppercase;color:var(--teal-light);margin-bottom:10px;display:flex;align-items:center;gap:10px}
+.section-eyebrow::before{content:'';display:inline-block;width:24px;height:1px;background:var(--teal-light)}
+.section-h2{font-family:var(--serif);font-size:clamp(26px,3.5vw,38px);font-weight:500;letter-spacing:-.01em;line-height:1.15;color:var(--ink);margin-bottom:6px}
+.section-h2 em{font-style:italic;color:var(--teal)}
+.lead{font-size:14px;color:var(--ink3);line-height:1.8;margin-bottom:28px;max-width:580px}
+
+/* ── ALGO TABS ── */
+.algo-tabs{display:flex;gap:0;border-bottom:2px solid var(--rule2);margin-bottom:32px}
+.algo-tab{
+  font-family:var(--mono);font-size:11px;letter-spacing:.09em;text-transform:uppercase;
+  padding:12px 24px;cursor:pointer;border:none;background:transparent;
+  color:var(--ink3);border-bottom:3px solid transparent;margin-bottom:-2px;
+  transition:color .15s,border-color .15s;font-weight:500;
+}
+.algo-tab:hover{color:var(--ink)}
+.algo-tab.active{color:var(--teal);border-bottom-color:var(--gold)}
+.algo-tab-badge{
+  display:inline-block;font-size:9px;
+  background:rgba(29,74,71,0.08);color:var(--teal);
+  border:1px solid rgba(29,74,71,0.2);border-radius:20px;
+  padding:1px 7px;margin-left:6px;vertical-align:middle;
+}
+.algo-tab.active .algo-tab-badge{background:rgba(201,168,76,0.12);color:var(--gold);border-color:rgba(201,168,76,0.3)}
+.tab-panel{display:none}
+.tab-panel.active{display:block;animation:fadeUp .3s ease}
+@keyframes fadeUp{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:translateY(0)}}
+
+/* ── VIS LAYOUT ── */
+.vis-layout{display:grid;grid-template-columns:1fr 300px;gap:24px;align-items:start}
+@media(max-width:820px){.vis-layout{grid-template-columns:1fr}}
+
+/* Canvas card */
+.canvas-card{background:var(--white);border:1px solid var(--rule2);border-radius:var(--r);overflow:hidden;position:relative;box-shadow:0 2px 16px rgba(0,0,0,0.06)}
+.canvas-meta{display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:10px;padding:10px 16px;border-top:1px solid var(--rule);font-family:var(--mono);font-size:11px;color:var(--ink3);background:var(--cream2)}
+.status{display:flex;align-items:center;gap:8px;padding:10px 16px;font-family:var(--mono);font-size:11px;color:var(--ink3);background:var(--cream2);border-top:1px solid var(--rule);min-height:38px}
+.status-dot{width:6px;height:6px;border-radius:50%;background:var(--ink4);flex-shrink:0}
+.status.running .status-dot{background:#e8a020;animation:blink 1s ease-in-out infinite}
+.status.done .status-dot{background:#2a8a5a}
+.status.error .status-dot{background:#c0392b}
+@keyframes blink{0%,100%{opacity:1}50%{opacity:.2}}
+
+/* Sidebar panels */
+.sb-panel{background:var(--white);border:1px solid var(--rule2);border-radius:var(--r);margin-bottom:12px;overflow:hidden;box-shadow:0 1px 8px rgba(0,0,0,0.04)}
+.sb-head{display:flex;align-items:center;justify-content:space-between;padding:11px 16px;border-bottom:1px solid var(--rule);background:var(--cream2)}
+.sb-label{font-family:var(--mono);font-size:10px;letter-spacing:.1em;text-transform:uppercase;color:var(--ink3)}
+.sb-body{padding:14px 16px}
+
+/* Inputs */
+input[type=number]{background:var(--cream2);color:var(--ink);border:1px solid var(--rule2);border-radius:6px;font-family:var(--mono);font-size:12px;padding:5px 8px;outline:none;transition:border-color .12s;-moz-appearance:textfield}
+input[type=number]::-webkit-inner-spin-button{-webkit-appearance:none}
+input[type=number]:focus{border-color:var(--teal)}
+
+/* City count */
+.count-row{display:flex;align-items:center;justify-content:space-between;gap:8px;margin-bottom:10px}
+.count-ctrl{display:flex;align-items:center;border:1px solid var(--rule2);border-radius:7px;overflow:hidden}
+.c-btn{width:30px;height:30px;border:none;background:var(--cream2);color:var(--ink);font-size:16px;cursor:pointer;transition:background .1s}
+.c-btn:hover{background:var(--cream3)}
+.c-val{width:34px;text-align:center;border:none;background:#fff;font-family:var(--mono);font-size:13px;font-weight:500;color:var(--teal);border-left:1px solid var(--rule);border-right:1px solid var(--rule);height:30px;display:flex;align-items:center;justify-content:center}
+
+/* Presets */
+.presets{display:grid;grid-template-columns:1fr 1fr;gap:5px}
+.preset{font-family:var(--mono);font-size:10px;letter-spacing:.05em;text-transform:uppercase;padding:7px;border-radius:6px;border:1px solid var(--rule2);background:var(--cream2);color:var(--ink3);cursor:pointer;text-align:center;transition:border-color .15s,color .15s,background .15s}
+.preset:hover{border-color:var(--teal);color:var(--teal);background:rgba(29,74,71,0.05)}
+
+/* Matrix */
+.mtx-wrap{overflow-x:auto}
+table.mtx{border-collapse:collapse;font-family:var(--mono);font-size:11px;width:100%}
+.mtx th{padding:4px 3px;text-align:center;font-size:10px;color:var(--ink3);font-weight:500;letter-spacing:.05em}
+.mtx th.ch{color:var(--teal);font-weight:500}
+.mtx td{padding:2px}
+.mtx td.diag{text-align:center;color:var(--ink4);font-size:10px}
+.mtx td input{width:100%;min-width:34px;background:var(--cream2);color:var(--ink);border:1px solid transparent;border-radius:4px;text-align:center;font-family:var(--mono);font-size:11px;padding:4px 2px;outline:none;transition:border-color .1s,background .1s}
+.mtx td input:hover{border-color:var(--rule2)}
+.mtx td input:focus{border-color:var(--teal);background:#fff}
+
+/* Edge toggle (for B&B) */
+.cell-wrap{display:flex;flex-direction:column;align-items:center;gap:2px}
+.edge-toggle{width:32px;height:16px;position:relative;cursor:pointer;background:var(--cream3);border-radius:8px;border:1px solid var(--rule2);transition:background .15s;flex-shrink:0}
+.edge-toggle.on{background:var(--teal)}
+.edge-toggle::after{content:'';position:absolute;top:2px;left:2px;width:10px;height:10px;background:#fff;border-radius:50%;transition:transform .15s;box-shadow:0 1px 3px rgba(0,0,0,.2)}
+.edge-toggle.on::after{transform:translateX(14px)}
+.wt-inp{width:32px;background:var(--cream2);color:var(--ink);border:1px solid var(--rule2);border-radius:3px;text-align:center;font-family:var(--mono);font-size:10px;padding:2px 1px;outline:none;-moz-appearance:textfield;transition:border-color .1s}
+.wt-inp::-webkit-inner-spin-button,.wt-inp::-webkit-outer-spin-button{-webkit-appearance:none}
+.wt-inp:focus{border-color:var(--teal)}
+.wt-inp:disabled{opacity:.35;cursor:not-allowed;background:var(--cream3)}
+
+/* Buttons */
+.btn{font-family:var(--sans);font-size:12px;font-weight:500;border-radius:7px;cursor:pointer;padding:7px 14px;display:inline-flex;align-items:center;gap:6px;transition:all .13s;border:none}
+.btn-primary{background:var(--teal);color:#fff}
+.btn-primary:hover{background:var(--teal-mid);transform:translateY(-1px)}
+.btn-primary:disabled{opacity:.35;cursor:not-allowed;transform:none}
+.btn-ghost{background:var(--cream2);color:var(--ink2);border:1px solid var(--rule2)}
+.btn-ghost:hover{background:var(--cream3);color:var(--ink);border-color:var(--ink4)}
+.btn-sm{padding:5px 10px;font-size:11px;border-radius:5px}
+.solve-btn{width:100%;padding:14px;font-family:var(--serif);font-size:19px;font-weight:500;background:var(--teal);color:#fff;border:none;border-radius:8px;cursor:pointer;letter-spacing:.01em;transition:all .15s;position:relative;overflow:hidden}
+.solve-btn::after{content:'→';position:absolute;right:18px;top:50%;transform:translateY(-50%);font-family:var(--sans);font-size:14px;opacity:0.7}
+.solve-btn:hover{background:var(--teal-mid);box-shadow:0 6px 24px rgba(29,74,71,0.25);transform:translateY(-1px)}
+.solve-btn:disabled{opacity:.35;cursor:not-allowed;transform:none;box-shadow:none}
+
+/* Metrics */
+.metrics{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-bottom:12px}
+.metric{background:var(--cream2);border-radius:8px;padding:12px 14px;border:1px solid var(--rule)}
+.metric .ml{font-size:10px;color:var(--ink3);text-transform:uppercase;letter-spacing:.08em;font-family:var(--mono)}
+.metric .mv{font-family:var(--mono);font-size:20px;font-weight:500;color:var(--teal);margin-top:4px}
+
+/* Route chips */
+.route-wrap{display:flex;flex-wrap:wrap;align-items:center;gap:4px}
+.rc{font-family:var(--mono);font-size:11px;font-weight:500;padding:3px 9px;border-radius:20px;border:1px solid}
+.ra{color:var(--ink4);font-size:11px}
+
+/* Edge table */
+table.edge-tbl{width:100%;border-collapse:collapse;font-family:var(--mono);font-size:11px}
+.edge-tbl tr{border-bottom:1px solid var(--rule)}
+.edge-tbl tr:last-child{border-bottom:none}
+.edge-tbl td{padding:5px 4px;color:var(--ink2)}
+.edge-tbl td:last-child{text-align:right;color:var(--ink);font-weight:500}
+.edge-tbl .tot td{color:var(--teal);border-top:1px solid var(--rule2);font-weight:600}
+
+.results{display:none}
+.results.on{display:block;animation:fadeUp .35s ease}
+
+/* ── DP SPECIFIC ── */
+.dp-steps-wrap{background:var(--white);border:1px solid var(--rule2);border-radius:var(--r);overflow:hidden;margin-top:20px}
+.dp-steps-head{display:flex;align-items:center;justify-content:space-between;padding:12px 16px;background:var(--cream2);border-bottom:1px solid var(--rule)}
+.dp-steps-scroll{overflow-x:auto;max-height:320px;overflow-y:auto}
+table.dp-tbl{width:100%;border-collapse:collapse;font-family:var(--mono);font-size:11px}
+.dp-tbl th{padding:7px 10px;background:var(--teal);color:#fff;font-size:10px;letter-spacing:.06em;text-transform:uppercase;font-weight:500;position:sticky;top:0;z-index:1}
+.dp-tbl td{padding:6px 10px;border-bottom:1px solid var(--rule);color:var(--ink2)}
+.dp-tbl tr:last-child td{border-bottom:none}
+.dp-tbl tr.highlight td{background:rgba(201,168,76,0.08);color:var(--ink)}
+.dp-tbl td.opt-cell{color:var(--teal);font-weight:600}
+.dp-tbl tr:hover td{background:var(--cream2)}
+
+/* ── B&B SPECIFIC ── */
+.no-sol{background:rgba(220,38,38,0.07);border:1px solid rgba(220,38,38,0.3);border-radius:8px;padding:10px 14px;font-family:var(--mono);font-size:11px;color:var(--bad);display:none;margin-top:10px}
+.no-sol.on{display:block}
+#tree-canvas-wrap{background:var(--white);border:1px solid var(--rule2);border-radius:var(--r);overflow:hidden;margin-top:20px}
+#tree-canvas-wrap .tree-head{display:flex;align-items:center;justify-content:space-between;padding:12px 16px;background:var(--cream2);border-bottom:1px solid var(--rule)}
+.tree-scroll{overflow-x:auto;overflow-y:auto;background:var(--cream);max-height:420px}
+#tree-canvas{display:block;background:var(--cream)}
+
+/* ── ABOUT SECTION ── */
+.desc-grid{display:grid;grid-template-columns:1fr 1fr;gap:52px;align-items:start}
+@media(max-width:700px){.desc-grid{grid-template-columns:1fr}}
+.body-text{font-size:14px;color:var(--ink2);line-height:1.85}
+.body-text p+p{margin-top:1em}
+.body-text strong{color:var(--ink);font-weight:600}
+.algo-card{background:var(--white);border:1px solid var(--rule2);border-radius:var(--r);overflow:hidden;box-shadow:0 2px 16px rgba(0,0,0,0.06)}
+.algo-card-head{background:var(--teal);color:#fff;padding:18px 22px;font-family:var(--serif);font-size:19px;font-weight:500;letter-spacing:.01em}
+.algo-card-body{padding:20px}
+.step-list{list-style:none;counter-reset:steps}
+.step-list li{counter-increment:steps;display:flex;gap:14px;align-items:flex-start;font-size:13px;color:var(--ink2);line-height:1.6;padding:10px 0;border-bottom:1px solid var(--rule)}
+.step-list li:last-child{border-bottom:none}
+.step-list li::before{content:counter(steps);font-family:var(--mono);font-size:11px;font-weight:500;background:rgba(29,74,71,0.07);color:var(--teal);border-radius:50%;min-width:22px;height:22px;display:flex;align-items:center;justify-content:center;flex-shrink:0;margin-top:1px;border:1px solid rgba(29,74,71,0.18)}
+.complexity-panel{background:var(--cream2);border-radius:8px;padding:16px;margin-top:14px;border:1px solid var(--rule)}
+.complexity-panel .formula{font-family:var(--mono);font-size:22px;font-weight:500;color:var(--teal);margin:6px 0;letter-spacing:-.02em}
+.complexity-panel p{font-size:12px;color:var(--ink3);line-height:1.6}
+.concept-row{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:16px}
+.concept-card{background:var(--cream2);border-radius:8px;padding:14px;border:1px solid var(--rule)}
+.concept-card h4{font-family:var(--mono);font-size:10px;letter-spacing:.1em;text-transform:uppercase;color:var(--teal-light);margin-bottom:6px}
+.concept-card p{font-size:12px;color:var(--ink2);line-height:1.6}
+
+/* ── DEVELOPERS ── */
+.dev-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:20px}
+@media(max-width:700px){.dev-grid{grid-template-columns:1fr}}
+.dev-card{border:1px solid var(--rule2);border-radius:var(--r);overflow:hidden;background:var(--white);transition:transform .18s,box-shadow .18s;box-shadow:0 2px 12px rgba(0,0,0,0.04)}
+.dev-card:hover{transform:translateY(-3px);box-shadow:0 10px 32px rgba(0,0,0,0.08)}
+.dev-av{height:110px;display:flex;align-items:center;justify-content:center;font-family:var(--serif);font-size:48px;border-bottom:1px solid var(--rule)}
+.dev-body{padding:18px 20px}
+.dev-name{font-family:var(--serif);font-size:21px;letter-spacing:-.01em;margin-bottom:3px}
+.dev-reg{font-family:var(--mono);font-size:11px;color:var(--ink3);letter-spacing:.06em;margin-bottom:10px}
+.dev-cls{display:inline-block;font-family:var(--mono);font-size:10px;background:rgba(29,74,71,0.07);color:var(--teal);border:1px solid rgba(29,74,71,0.18);border-radius:20px;padding:2px 9px;letter-spacing:.05em;text-transform:uppercase}
+
+footer{border-top:1px solid var(--rule);padding:24px 52px;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:10px;font-family:var(--mono);font-size:11px;color:var(--ink3)}
+
+#tip{position:fixed;pointer-events:none;z-index:200;background:var(--ink);color:#fff;border-radius:6px;padding:5px 10px;font-family:var(--mono);font-size:11px;display:none;white-space:nowrap;box-shadow:0 4px 12px rgba(0,0,0,.25)}
+
+hr{border:none;border-top:1px solid var(--rule)}
+
+/* Algorithm badge pills in tabs */
+.algo-description-bar{display:flex;gap:12px;flex-wrap:wrap;margin-bottom:20px}
+.algo-pill{display:inline-flex;align-items:center;gap:6px;background:rgba(29,74,71,0.06);border:1px solid rgba(29,74,71,0.15);border-radius:20px;padding:5px 12px;font-family:var(--mono);font-size:10px;color:var(--teal);letter-spacing:.06em}
+.algo-pill-gold{background:rgba(201,168,76,0.08);border-color:rgba(201,168,76,0.25);color:#a07830}
+</style>
+</head>
+<body>
+<div id="tip"></div>
+
+<!-- NAV -->
+<nav>
+  <a class="nav-logo" href="#visualizer">
+    <div class="nav-logo-mark">TSP</div>
+    Travelling Salesman
+  </a>
+  <div class="nav-links">
+    <a class="nav-link active" href="#visualizer">Visualizer</a>
+    <a class="nav-link" href="#about">About</a>
+    <a class="nav-link" href="#developers">Developers</a>
+  </div>
+  <a class="nav-cta" href="#visualizer">Get Started</a>
+</nav>
+
+<!-- HERO -->
+<div class="hero">
+  <div class="hero-inner">
+    <div class="hero-tag">Design &amp; Analysis of Algorithms — Course Project</div>
+    <div class="hero-grid">
+      <div class="hero-left">
+        <h1 class="hero-h1">Find the <em>Optimal Tour</em><br/>Across Every City</h1>
+        <p class="hero-sub">Explore the Travelling Salesman Problem using two exact algorithms — Held–Karp Dynamic Programming and Branch &amp; Bound. Set cities, define edge weights, and compare how each method discovers the optimal path.</p>
+        <div class="hero-actions">
+          <a class="hero-btn hero-btn-primary" href="#visualizer">Launch Visualizer →</a>
+          <a class="hero-btn hero-btn-ghost" href="#about">How It Works</a>
+        </div>
+        <div class="hero-features">
+          <span class="h-feat"><span class="h-feat-icon">⬡</span> Up to 8 Cities</span>
+          <span class="h-feat"><span class="h-feat-icon">◈</span> Globally Optimal</span>
+          <span class="h-feat"><span class="h-feat-icon">⟳</span> Two Algorithms</span>
+          <span class="h-feat"><span class="h-feat-icon">⊗</span> Edge Control</span>
+        </div>
+        <div class="hero-stats">
+          <div class="h-stat"><div class="hs-val">O(n²·2ⁿ)</div><div class="hs-label">DP Complexity</div></div>
+          <div class="h-stat"><div class="hs-val">O(n!)</div><div class="hs-label">B&amp;B Worst Case</div></div>
+          <div class="h-stat"><div class="hs-val">2</div><div class="hs-label">Algorithms</div></div>
+        </div>
+      </div>
+      <div>
+        <div class="hero-canvas-wrap">
+          <div class="hero-canvas-bar">
+            <div class="hcb-dots">
+              <div class="hcb-dot" style="background:#ff5f57"></div>
+              <div class="hcb-dot" style="background:#febc2e"></div>
+              <div class="hcb-dot" style="background:#28c840"></div>
+            </div>
+            <div class="hcb-title">TSP Visualizer — Interactive Canvas</div>
+            <div></div>
+          </div>
+          <div class="hero-canvas-inner">
+            <canvas id="tsp-canvas-hero" style="display:block;width:100%;border-radius:4px;opacity:0.85"></canvas>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- MAIN -->
+<div class="page-body">
+<div class="section" id="visualizer">
+  <div class="section-eyebrow">Section 01</div>
+  <h2 class="section-h2">Interactive <em>Visualizer</em></h2>
+  <p class="lead">Set the number of cities, define travel weights, toggle edge existence — then solve with either algorithm and see the optimal tour emerge.</p>
+
+  <!-- ALGORITHM TABS -->
+  <div class="algo-tabs">
+    <button class="algo-tab active" onclick="switchTab('dp')">
+      Dynamic Programming <span class="algo-tab-badge">Held–Karp</span>
+    </button>
+    <button class="algo-tab" onclick="switchTab('bb')">
+      Branch &amp; Bound <span class="algo-tab-badge">B&amp;B Tree</span>
+    </button>
+  </div>
+
+  <!-- ══════════════════════════════════
+       TAB 1 — DYNAMIC PROGRAMMING
+  ════════════════════════════════════ -->
+  <div class="tab-panel active" id="tab-dp">
+    <div class="algo-description-bar">
+      <span class="algo-pill">Held–Karp DP</span>
+      <span class="algo-pill">O(n² · 2ⁿ) time</span>
+      <span class="algo-pill algo-pill-gold">Globally optimal</span>
+    </div>
+
+    <div class="vis-layout">
+      <!-- LEFT: Canvas -->
+      <div>
+        <div class="canvas-card">
+          <div id="dp-cvs-wrap" style="position:relative;background:#fff">
+            <canvas id="dp-canvas"></canvas>
+          </div>
+          <div class="canvas-meta">
+            <span>Cities: <strong id="dp-badge-n">4</strong> &nbsp;·&nbsp; Drag to reposition</span>
+            <div style="display:flex;gap:6px;flex-wrap:wrap">
+              <button class="btn btn-ghost btn-sm" onclick="dpClear()">Clear</button>
+              <button class="btn btn-ghost btn-sm" onclick="dpShuffle()">Shuffle</button>
+              <button class="btn btn-ghost btn-sm" onclick="dpReset()">Reset</button>
+            </div>
+          </div>
+          <div class="status" id="dp-status">
+            <div class="status-dot"></div>
+            <span id="dp-status-msg">Edit the cost matrix, then press Solve.</span>
+          </div>
+        </div>
+
+        <!-- DP Steps table -->
+        <div class="dp-steps-wrap" id="dp-steps-wrap" style="display:none;margin-top:16px">
+          <div class="dp-steps-head">
+            <span class="sb-label">Cost Matrix (C[i][j])</span>
+            <span style="font-family:var(--mono);font-size:10px;color:var(--ink3)">Row = from · Col = to</span>
+          </div>
+          <div class="dp-steps-scroll">
+            <table class="dp-tbl" id="dp-cost-display"></table>
+          </div>
+        </div>
+
+        <!-- DP States table -->
+        <div class="dp-steps-wrap" id="dp-states-wrap" style="display:none;margin-top:12px">
+          <div class="dp-steps-head">
+            <span class="sb-label">DP Optimal Subpaths (dp[S][v] = min cost)</span>
+            <span style="font-family:var(--mono);font-size:10px;color:var(--ink3)">S = visited set bitmask · v = current city</span>
+          </div>
+          <div class="dp-steps-scroll">
+            <table class="dp-tbl" id="dp-states-tbl"></table>
+          </div>
+        </div>
+
+        <!-- Results -->
+        <div class="results" id="dp-results" style="margin-top:16px">
+          <div class="metrics">
+            <div class="metric"><div class="ml">Optimal Cost</div><div class="mv" id="dp-r-cost">—</div></div>
+            <div class="metric"><div class="ml">Edges</div><div class="mv" id="dp-r-hops">—</div></div>
+            <div class="metric"><div class="ml">DP States</div><div class="mv" id="dp-r-states">—</div></div>
+          </div>
+          <div class="sb-panel">
+            <div class="sb-head"><span class="sb-label">Optimal Tour</span></div>
+            <div class="sb-body"><div class="route-wrap" id="dp-route-chips"></div></div>
+          </div>
+          <div class="sb-panel">
+            <div class="sb-head"><span class="sb-label">Edge Breakdown</span></div>
+            <div class="sb-body" style="padding:10px 14px">
+              <table class="edge-tbl" id="dp-edge-tbl"></table>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- RIGHT: Sidebar -->
+      <div>
+        <div class="sb-panel">
+          <div class="sb-head"><span class="sb-label">01 — Cities</span></div>
+          <div class="sb-body">
+            <div class="count-row">
+              <label style="font-size:13px;color:var(--ink2)">Number of cities</label>
+              <div class="count-ctrl">
+                <button class="c-btn" onclick="dpChangeN(-1)">−</button>
+                <div class="c-val" id="dp-count-disp">4</div>
+                <button class="c-btn" onclick="dpChangeN(+1)">+</button>
+              </div>
+            </div>
+            <p style="font-size:11px;color:var(--ink4);font-family:var(--mono);margin-bottom:12px">3 – 8 cities</p>
+            <div class="presets">
+              <button class="preset" onclick="dpLoadPreset('tri')">△ 3-city</button>
+              <button class="preset" onclick="dpLoadPreset('sq')">□ 4-city</button>
+              <button class="preset" onclick="dpLoadPreset('p5')">⬠ 5-city</button>
+              <button class="preset" onclick="dpLoadPreset('rand')">⚂ Random</button>
+            </div>
+          </div>
+        </div>
+
+        <div class="sb-panel">
+          <div class="sb-head">
+            <span class="sb-label">02 — Cost Matrix</span>
+            <button class="btn btn-ghost btn-sm" onclick="dpSymmetrize()">Symmetrize</button>
+          </div>
+          <div class="sb-body">
+            <div class="mtx-wrap"><table class="mtx" id="dp-cost-tbl"></table></div>
+            <p style="font-size:10px;color:var(--ink4);font-family:var(--mono);margin-top:8px">C[i][j] = cost from city i → j</p>
+          </div>
+        </div>
+
+        <div class="sb-panel">
+          <div class="sb-head"><span class="sb-label">03 — Solve</span></div>
+          <div class="sb-body" style="display:flex;flex-direction:column;gap:10px">
+            <button class="solve-btn" id="dp-solve-btn" onclick="dpSolve()">Solve TSP</button>
+            <div style="font-size:11px;color:var(--ink3);font-family:var(--mono);line-height:1.6">
+              Held–Karp DP &middot; O(n² · 2ⁿ) &middot; Globally optimal
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ══════════════════════════════════
+       TAB 2 — BRANCH AND BOUND
+  ════════════════════════════════════ -->
+  <div class="tab-panel" id="tab-bb">
+    <div class="algo-description-bar">
+      <span class="algo-pill">Branch &amp; Bound</span>
+      <span class="algo-pill">Best-First Search</span>
+      <span class="algo-pill algo-pill-gold">Pruned subtrees</span>
+    </div>
+
+    <div class="vis-layout">
+      <!-- LEFT: Canvas + tree -->
+      <div>
+        <div class="canvas-card">
+          <div id="bb-cvs-wrap" style="position:relative;background:#fff">
+            <canvas id="bb-canvas"></canvas>
+          </div>
+          <div class="canvas-meta">
+            <span>Cities: <strong id="bb-badge-n">4</strong> &nbsp;·&nbsp; Drag to reposition</span>
+            <div style="display:flex;gap:6px;flex-wrap:wrap">
+              <button class="btn btn-ghost btn-sm" onclick="bbClear()">Clear</button>
+              <button class="btn btn-ghost btn-sm" onclick="bbShuffle()">Shuffle</button>
+              <button class="btn btn-ghost btn-sm" onclick="bbReset()">Reset</button>
+            </div>
+          </div>
+          <div class="status" id="bb-status">
+            <div class="status-dot"></div>
+            <span id="bb-status-msg">Toggle edges, set weights, then press Solve.</span>
+          </div>
+        </div>
+
+        <div class="no-sol" id="bb-no-sol">No valid Hamiltonian tour found. Enable more edges so all cities are reachable, then try again.</div>
+
+        <!-- Results -->
+        <div class="results" id="bb-results" style="margin-top:16px">
+          <div class="metrics">
+            <div class="metric"><div class="ml">Optimal Cost</div><div class="mv" id="bb-r-cost">—</div></div>
+            <div class="metric"><div class="ml">Tour Edges</div><div class="mv" id="bb-r-hops">—</div></div>
+            <div class="metric"><div class="ml">Nodes Explored</div><div class="mv" id="bb-r-nodes">—</div></div>
+          </div>
+          <div class="sb-panel">
+            <div class="sb-head"><span class="sb-label">Optimal Tour</span></div>
+            <div class="sb-body"><div class="route-wrap" id="bb-route-chips"></div></div>
+          </div>
+          <div class="sb-panel">
+            <div class="sb-head"><span class="sb-label">Edge Breakdown</span></div>
+            <div class="sb-body" style="padding:10px 14px">
+              <table class="edge-tbl" id="bb-edge-tbl"></table>
+            </div>
+          </div>
+        </div>
+
+        <!-- B&B Tree -->
+        <div id="tree-canvas-wrap" style="display:none">
+          <div class="tree-head">
+            <span class="sb-label">Branch &amp; Bound Decision Tree</span>
+            <span style="font-family:var(--mono);font-size:10px;color:var(--ink3)">lb = lower bound &nbsp;·&nbsp; ✗ = pruned &nbsp;·&nbsp; ★ = optimal</span>
+          </div>
+          <div class="tree-scroll">
+            <canvas id="tree-canvas"></canvas>
+          </div>
+        </div>
+      </div>
+
+      <!-- RIGHT: Sidebar -->
+      <div>
+        <div class="sb-panel">
+          <div class="sb-head"><span class="sb-label">01 — Cities</span></div>
+          <div class="sb-body">
+            <div class="count-row">
+              <label style="font-size:13px;color:var(--ink2)">Number of cities</label>
+              <div class="count-ctrl">
+                <button class="c-btn" onclick="bbChangeN(-1)">−</button>
+                <div class="c-val" id="bb-count-disp">4</div>
+                <button class="c-btn" onclick="bbChangeN(+1)">+</button>
+              </div>
+            </div>
+            <p style="font-size:11px;color:var(--ink4);font-family:var(--mono);margin-bottom:12px">3 – 6 cities</p>
+            <div class="presets">
+              <button class="preset" onclick="bbLoadPreset('tri')">△ 3-city</button>
+              <button class="preset" onclick="bbLoadPreset('sq')">□ 4-city</button>
+              <button class="preset" onclick="bbLoadPreset('p5')">⬠ 5-city</button>
+              <button class="preset" onclick="bbLoadPreset('rand')">⚂ Random</button>
+            </div>
+          </div>
+        </div>
+
+        <div class="sb-panel">
+          <div class="sb-head">
+            <span class="sb-label">02 — Edges &amp; Weights</span>
+            <button class="btn btn-ghost btn-sm" onclick="bbSymmetrize()">Mirror</button>
+          </div>
+          <div class="sb-body">
+            <div class="mtx-wrap"><table class="mtx" id="bb-cost-tbl"></table></div>
+            <p style="font-size:10px;color:var(--ink4);font-family:var(--mono);margin-top:8px">Toggle = edge exists &nbsp;·&nbsp; Number = weight</p>
+          </div>
+        </div>
+
+        <div class="sb-panel">
+          <div class="sb-head"><span class="sb-label">03 — Lower Bound Info</span></div>
+          <div class="sb-body" style="padding:12px 14px">
+            <div id="lb-info" style="font-family:var(--mono);font-size:10px;color:var(--ink3);line-height:1.8">
+              <div style="margin-bottom:6px;color:var(--ink2);font-size:11px;font-weight:500">Initial Reduced Matrix</div>
+              <div style="overflow-x:auto"><table class="dp-tbl" id="reduced-mtx-tbl" style="font-size:10px"></table></div>
+              <div style="margin-top:8px">LB<sub>0</sub> = <span id="init-lb-val" style="color:var(--teal);font-weight:600">—</span></div>
+            </div>
+          </div>
+        </div>
+
+        <div class="sb-panel">
+          <div class="sb-head"><span class="sb-label">04 — Solve</span></div>
+          <div class="sb-body" style="display:flex;flex-direction:column;gap:10px">
+            <button class="solve-btn" id="bb-solve-btn" onclick="bbSolve()">Solve TSP</button>
+            <div style="font-size:11px;color:var(--ink3);font-family:var(--mono);line-height:1.6">
+              Branch &amp; Bound &middot; Exact optimal &middot; Prunes infeasible paths
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<hr/>
+
+<!-- SECTION 2 — ABOUT -->
+<div class="section" id="about">
+  <div class="section-eyebrow">Section 02</div>
+  <h2 class="section-h2">About <em>the Problem</em></h2>
+  <p class="lead">One of the most studied combinatorial optimisation problems in computer science.</p>
+
+  <div class="desc-grid">
+    <div>
+      <div class="body-text">
+        <p>The <strong>Travelling Salesman Problem (TSP)</strong> asks: given a set of cities and the costs to travel between each pair, what is the shortest possible route that visits every city exactly once and returns to the start?</p>
+        <p>TSP is <strong>NP-hard</strong>. With n cities there are (n−1)!/2 distinct tours. With 10 cities there are 181,440; with 20 there are over 60 quadrillion. Brute-force is infeasible.</p>
+        <p><strong>Dynamic Programming (Held–Karp)</strong> solves TSP exactly in O(n² · 2ⁿ) time by storing optimal sub-paths to each subset of cities. <strong>Branch and Bound</strong> prunes infeasible subtrees using a lower bound computed from the reduced cost matrix — often much faster in practice.</p>
+      </div>
+      <div class="concept-row">
+        <div class="concept-card"><h4>DP Subproblem</h4><p>dp[S][v] = minimum cost to reach city v having visited exactly the cities in set S.</p></div>
+        <div class="concept-card"><h4>Bitmask DP</h4><p>Sets are represented as bitmasks. There are 2ⁿ subsets × n cities = n · 2ⁿ states.</p></div>
+        <div class="concept-card"><h4>B&amp;B Bounding</h4><p>Lower bound = current cost + reduced matrix cost. Prune if lb ≥ best known tour.</p></div>
+        <div class="concept-card"><h4>Pruning Power</h4><p>Effective pruning makes B&amp;B far faster than brute force. Worst case is still O(n!).</p></div>
+      </div>
+    </div>
+
+    <div>
+      <div class="algo-card" style="margin-bottom:16px">
+        <div class="algo-card-head">Held–Karp DP — Step by Step</div>
+        <div class="algo-card-body">
+          <ol class="step-list">
+            <li>Start at city 0. Initialize dp[{0}][0] = 0; all others = ∞.</li>
+            <li>For each subset S containing city 0, for each city u in S, for each city v not in S: relax dp[S∪{v}][v] = min(dp[S∪{v}][v], dp[S][u] + cost[u][v]).</li>
+            <li>After filling all states, find the optimal tour cost: min over u ≠ 0 of dp[all cities][u] + cost[u][0].</li>
+            <li>Trace back through parent pointers to reconstruct the optimal path.</li>
+          </ol>
+          <div class="complexity-panel">
+            <div style="font-size:10px;color:var(--ink3);font-family:var(--mono);letter-spacing:.08em;text-transform:uppercase;margin-bottom:2px">Complexity</div>
+            <div class="formula">O(n² · 2ⁿ)</div>
+            <p>Exponential in n but far better than factorial brute force. Practical up to ~20 cities.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="algo-card">
+        <div class="algo-card-head">Branch &amp; Bound — Step by Step</div>
+        <div class="algo-card-body">
+          <ol class="step-list">
+            <li>Compute the reduced cost matrix. The reduction cost is the initial lower bound lb₀.</li>
+            <li>Branch: create child nodes for each unvisited city. Each child extends the partial path by one city.</li>
+            <li>For each child, update the matrix (set row/col to ∞), reduce again. New lb = parent lb + edge cost + new reduction.</li>
+            <li>Priority queue ordered by lb (Best-First). Expand the node with the smallest lb.</li>
+            <li>When all cities are visited, record the complete tour as the current best upper bound.</li>
+            <li>Prune any node with lb ≥ best. Empty queue → optimal tour found.</li>
+          </ol>
+          <div class="complexity-panel">
+            <div style="font-size:10px;color:var(--ink3);font-family:var(--mono);letter-spacing:.08em;text-transform:uppercase;margin-bottom:2px">Worst-case Complexity</div>
+            <div class="formula">O(n! / pruning)</div>
+            <p>Worst case is factorial, but aggressive pruning makes it vastly faster in practice.</p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<hr/>
+
+<!-- SECTION 3 — DEVELOPERS -->
+<div class="section" id="developers">
+  <div class="section-eyebrow">Section 03</div>
+  <h2 class="section-h2">The <em>Developers</em></h2>
+  <p class="lead" style="margin-bottom:32px">Design &amp; Analysis of Algorithms — Course Project</p>
+  <div class="dev-grid">
+    <div class="dev-card">
+      <div class="dev-av" style="background:linear-gradient(135deg,rgba(29,74,71,0.15),rgba(201,168,76,0.15))">A</div>
+      <div class="dev-body">
+        <div class="dev-name">Developer One</div>
+        <div class="dev-reg">Reg. No. 000000000</div>
+        <span class="dev-cls">Section A</span>
+      </div>
+    </div>
+    <div class="dev-card">
+      <div class="dev-av" style="background:linear-gradient(135deg,rgba(29,74,71,0.12),rgba(61,139,130,0.18))">B</div>
+      <div class="dev-body">
+        <div class="dev-name">Developer Two</div>
+        <div class="dev-reg">Reg. No. 000000000</div>
+        <span class="dev-cls">Section A</span>
+      </div>
+    </div>
+    <div class="dev-card">
+      <div class="dev-av" style="background:linear-gradient(135deg,rgba(201,168,76,0.15),rgba(232,201,122,0.2))">C</div>
+      <div class="dev-body">
+        <div class="dev-name">Developer Three</div>
+        <div class="dev-reg">Reg. No. 000000000</div>
+        <span class="dev-cls">Section A</span>
+      </div>
+    </div>
+  </div>
+</div>
+</div><!-- end page-body -->
+
+<footer>
+  <span>TSP Visualizer — DAA Project</span>
+  <span>Held–Karp DP · Branch &amp; Bound · Exact Optimal</span>
+</footer>
+
+<script>
+// ─── POLYFILL: roundRect ──────────────────────────
+if (!CanvasRenderingContext2D.prototype.roundRect) {
+  CanvasRenderingContext2D.prototype.roundRect = function(x, y, w, h, r) {
+    r = Math.min(r, w / 2, h / 2);
+    this.beginPath();
+    this.moveTo(x + r, y);
+    this.lineTo(x + w - r, y);
+    this.quadraticCurveTo(x + w, y, x + w, y + r);
+    this.lineTo(x + w, y + h - r);
+    this.quadraticCurveTo(x + w, y + h, x + w - r, y + h);
+    this.lineTo(x + r, y + h);
+    this.quadraticCurveTo(x, y + h, x, y + h - r);
+    this.lineTo(x, y + r);
+    this.quadraticCurveTo(x, y, x + r, y);
+    this.closePath();
+    return this;
+  };
+}
+
+// ─── SHARED CONFIG ───────────────────────────────
+const NAMES = ['A','B','C','D','E','F','G','H'];
+const PALETTE = ['#c9a84c','#2a7a70','#a07830','#1d4a47','#3d8b82','#8B5C2A','#5A3D1A','#2D6B5A'];
+
+// ─── TAB SWITCHING ────────────────────────────────
+function switchTab(tab) {
+  document.querySelectorAll('.algo-tab').forEach((t,i) => t.classList.toggle('active', (i===0&&tab==='dp')||(i===1&&tab==='bb')));
+  document.getElementById('tab-dp').classList.toggle('active', tab==='dp');
+  document.getElementById('tab-bb').classList.toggle('active', tab==='bb');
+  if (tab==='dp') { dpResize(); }
+  else { bbResize(); if(bbTreeNodes.length) drawTree(); }
+}
+
+// ═══════════════════════════════════════════════════
+//  DYNAMIC PROGRAMMING SECTION
+// ═══════════════════════════════════════════════════
+
+let dpN = 4;
+let dpCosts = [];
+let dpPositions = [];
+let dpOptPath = [];
+let dpSolving = false;
+let dpAnimTimers = [];
+let dpSalesmanRaf = null;
+
+const dpCanvas = document.getElementById('dp-canvas');
+const dpCtx = dpCanvas.getContext('2d');
+let dpCW = 0, dpCH = 0;
+
+function dpResize() {
+  const wrap = document.getElementById('dp-cvs-wrap');
+  const w = Math.max(wrap.clientWidth || 400, 200);
+  const h = Math.round(Math.max(280, Math.min(440, w * 0.58)));
+  const dpr = window.devicePixelRatio || 1;
+  dpCanvas.width = w * dpr; dpCanvas.height = h * dpr;
+  dpCanvas.style.width = w + 'px'; dpCanvas.style.height = h + 'px';
+  dpCW = w; dpCH = h;
+  dpCtx.setTransform(dpr, 0, 0, dpr, 0, 0);
+  dpDraw();
+}
+window.addEventListener('resize', () => {
+  dpResize();
+  bbResize();
+  if (bbTreeNodes.length) drawTree();
+});
+
+function dpCirclePos(n) {
+  return Array.from({length:n}, (_,i) => ({
+    x: 0.5 + 0.37*Math.cos(2*Math.PI*i/n - Math.PI/2),
+    y: 0.5 + 0.37*Math.sin(2*Math.PI*i/n - Math.PI/2)
+  }));
+}
+function dpPX(i) { return {x: dpPositions[i].x*dpCW, y: dpPositions[i].y*dpCH}; }
+
+function dpInitCosts(n, keepOld) {
+  const old = dpCosts;
+  dpCosts = Array.from({length:n}, (_,i) => Array.from({length:n}, (_,j) => {
+    if (i===j) return 0;
+    if (keepOld && old[i] && old[i][j]!==undefined) return old[i][j];
+    return Math.floor(Math.random()*25)+5;
+  }));
+}
+
+function dpRenderMatrix() {
+  const tbl = document.getElementById('dp-cost-tbl');
+  let h = '<tr><th></th>';
+  for(let j=0;j<dpN;j++) h+=`<th class="ch">${NAMES[j]}</th>`;
+  h+='</tr>';
+  for(let i=0;i<dpN;i++){
+    h+=`<tr><th class="ch">${NAMES[i]}</th>`;
+    for(let j=0;j<dpN;j++){
+      if(i===j){h+=`<td class="diag">—</td>`;continue;}
+      h+=`<td><input type="number" min="1" max="9999" value="${dpCosts[i][j]}" data-i="${i}" data-j="${j}"
+        oninput="dpCosts[+this.dataset.i][+this.dataset.j]=Math.max(1,parseInt(this.value)||1)"/></td>`;
+    }
+    h+='</tr>';
+  }
+  tbl.innerHTML = h;
+}
+
+function dpReadMatrix() {
+  document.querySelectorAll('#dp-cost-tbl input').forEach(el => {
+    const i=+el.dataset.i, j=+el.dataset.j;
+    dpCosts[i][j] = Math.max(1, parseInt(el.value)||1);
+  });
+}
+
+function dpSymmetrize() {
+  dpReadMatrix();
+  for(let i=0;i<dpN;i++) for(let j=i+1;j<dpN;j++) dpCosts[j][i]=dpCosts[i][j];
+  dpRenderMatrix();
+}
+
+// Drag
+let dpDrag = -1;
+function dpEvXY(e) {
+  const r=dpCanvas.getBoundingClientRect();
+  const s=e.touches?e.touches[0]:e;
+  return {x:s.clientX-r.left,y:s.clientY-r.top};
+}
+function dpCityAt(x,y) {
+  for(let i=0;i<dpN;i++){const p=dpPX(i);if(Math.hypot(x-p.x,y-p.y)<18)return i;}
+  return -1;
+}
+dpCanvas.addEventListener('mousedown',e=>{const{x,y}=dpEvXY(e);dpDrag=dpCityAt(x,y);});
+dpCanvas.addEventListener('touchstart',e=>{e.preventDefault();const{x,y}=dpEvXY(e);dpDrag=dpCityAt(x,y);},{passive:false});
+dpCanvas.addEventListener('mousemove',e=>{
+  const{x,y}=dpEvXY(e);
+  if(dpDrag>=0){dpPositions[dpDrag]={x:Math.max(0.06,Math.min(0.94,x/dpCW)),y:Math.max(0.06,Math.min(0.94,y/dpCH))};dpDraw();return;}
+  dpCanvas.style.cursor=dpCityAt(x,y)>=0?'grab':'crosshair';
+});
+dpCanvas.addEventListener('touchmove',e=>{e.preventDefault();if(dpDrag<0)return;const{x,y}=dpEvXY(e);dpPositions[dpDrag]={x:Math.max(0.06,Math.min(0.94,x/dpCW)),y:Math.max(0.06,Math.min(0.94,y/dpCH))};dpDraw();},{passive:false});
+dpCanvas.addEventListener('mouseup',()=>dpDrag=-1);
+dpCanvas.addEventListener('touchend',()=>dpDrag=-1);
+dpCanvas.addEventListener('mouseleave',()=>dpDrag=-1);
+
+function dpDraw(pathUpTo, salesPos) {
+  dpCtx.clearRect(0,0,dpCW,dpCH);
+  // grid
+  dpCtx.strokeStyle='rgba(0,0,0,0.03)';dpCtx.lineWidth=1;
+  for(let x=0;x<dpCW;x+=40){dpCtx.beginPath();dpCtx.moveTo(x,0);dpCtx.lineTo(x,dpCH);dpCtx.stroke();}
+  for(let y=0;y<dpCH;y+=40){dpCtx.beginPath();dpCtx.moveTo(0,y);dpCtx.lineTo(dpCW,y);dpCtx.stroke();}
+
+  const drawLen = pathUpTo!==undefined ? pathUpTo : dpOptPath.length;
+
+  // All edges
+  for(let i=0;i<dpN;i++) for(let j=i+1;j<dpN;j++){
+    const a=dpPX(i),b=dpPX(j);
+    dpCtx.beginPath();dpCtx.moveTo(a.x,a.y);dpCtx.lineTo(b.x,b.y);
+    dpCtx.strokeStyle='rgba(0,0,0,0.06)';dpCtx.lineWidth=1;dpCtx.stroke();
+    const mx=(a.x+b.x)/2,my=(a.y+b.y)/2;
+    const dx=b.x-a.x,dy=b.y-a.y,len=Math.hypot(dx,dy);
+    if(len>0){
+      const ox=-dy/len*11,oy=dx/len*11;
+      dpCtx.font='9px JetBrains Mono,monospace';
+      dpCtx.fillStyle='rgba(0,0,0,0.25)';dpCtx.textAlign='center';dpCtx.textBaseline='middle';
+      dpCtx.fillText(dpCosts[i][j],mx+ox,my+oy);
+    }
+  }
+
+  // Optimal path
+  if(dpOptPath.length>1){
+    for(let k=0;k<drawLen-1&&k<dpOptPath.length-1;k++){
+      const f=dpOptPath[k],t=dpOptPath[k+1];
+      const a=dpPX(f),b=dpPX(t);
+      const dx=b.x-a.x,dy=b.y-a.y,len=Math.hypot(dx,dy);
+      if(len<1)continue;
+      dpCtx.setLineDash([]);
+      dpCtx.beginPath();dpCtx.moveTo(a.x,a.y);dpCtx.lineTo(b.x,b.y);
+      dpCtx.strokeStyle='rgba(201,168,76,0.2)';dpCtx.lineWidth=10;dpCtx.lineCap='round';dpCtx.stroke();
+      dpCtx.beginPath();dpCtx.moveTo(a.x,a.y);dpCtx.lineTo(b.x,b.y);
+      dpCtx.strokeStyle='#c9a84c';dpCtx.lineWidth=2.5;dpCtx.lineCap='round';dpCtx.stroke();
+      const tm=0.55,mx=a.x+dx*tm,my2=a.y+dy*tm;
+      const ux=dx/len,uy=dy/len,hw=4.5;
+      dpCtx.beginPath();dpCtx.moveTo(mx+uy*hw,my2-ux*hw);dpCtx.lineTo(mx+ux*9,my2+uy*9);dpCtx.lineTo(mx-uy*hw,my2+ux*hw);
+      dpCtx.fillStyle='#c9a84c';dpCtx.fill();
+      const ox2=-uy*14,oy2=ux*14;
+      dpCtx.font='500 10px JetBrains Mono,monospace';dpCtx.fillStyle='#c9a84c';
+      dpCtx.textAlign='center';dpCtx.textBaseline='middle';dpCtx.fillText(dpCosts[f][t],mx+ox2,my2+oy2);
+    }
+  }
+
+  // Cities
+  for(let i=0;i<dpN;i++){
+    const p=dpPX(i),col=PALETTE[i];
+    const inPath=dpOptPath.length>1&&dpOptPath.slice(0,drawLen).includes(i);
+    const isStart=i===0,r=isStart?14:11;
+    if(inPath){dpCtx.beginPath();dpCtx.arc(p.x,p.y,r+7,0,2*Math.PI);dpCtx.fillStyle=col+'18';dpCtx.fill();}
+    dpCtx.beginPath();dpCtx.arc(p.x,p.y,r,0,2*Math.PI);
+    dpCtx.fillStyle=inPath?col:col+'66';dpCtx.fill();
+    dpCtx.strokeStyle='rgba(255,255,255,0.5)';dpCtx.lineWidth=1.5;dpCtx.stroke();
+    dpCtx.font=`600 ${isStart?12:10}px JetBrains Mono,monospace`;
+    dpCtx.fillStyle='#fff';dpCtx.textAlign='center';dpCtx.textBaseline='middle';
+    dpCtx.fillText(NAMES[i],p.x,p.y);
+    dpCtx.font='400 10px Outfit,sans-serif';
+    dpCtx.fillStyle=inPath?col:'rgba(100,100,100,0.6)';
+    dpCtx.textAlign='center';dpCtx.textBaseline='top';
+    dpCtx.fillText('City '+NAMES[i],p.x,p.y+r+4);
+  }
+
+  if(salesPos) dpDrawSalesman(salesPos.x,salesPos.y,salesPos.phase);
+}
+
+function dpDrawSalesman(x,y,phase){
+  dpCtx.save();dpCtx.translate(x,y);
+  const c='#1d4a47',lw=1.8;
+  dpCtx.save();dpCtx.scale(1,0.3);dpCtx.translate(0,45);
+  const sg=dpCtx.createRadialGradient(0,0,0,0,0,12);
+  sg.addColorStop(0,'rgba(0,0,0,0.15)');sg.addColorStop(1,'rgba(0,0,0,0)');
+  dpCtx.fillStyle=sg;dpCtx.beginPath();dpCtx.ellipse(0,0,12,10,0,0,2*Math.PI);dpCtx.fill();dpCtx.restore();
+  const sw=Math.sin(phase)*0.35;
+  dpCtx.strokeStyle=c;dpCtx.lineWidth=lw;dpCtx.lineCap='round';
+  dpCtx.beginPath();dpCtx.moveTo(0,-6);dpCtx.lineTo(0,10);dpCtx.stroke();
+  dpCtx.beginPath();dpCtx.arc(0,-13,6.5,0,2*Math.PI);
+  dpCtx.fillStyle='#fff';dpCtx.fill();dpCtx.strokeStyle=c;dpCtx.stroke();
+  dpCtx.fillStyle='#c9a84c';
+  dpCtx.beginPath();dpCtx.ellipse(0,-20,8.5,2.2,0,0,2*Math.PI);dpCtx.fill();
+  dpCtx.beginPath();dpCtx.moveTo(-5,-20);dpCtx.lineTo(-4,-29);dpCtx.lineTo(4,-29);dpCtx.lineTo(5,-20);dpCtx.closePath();dpCtx.fill();
+  dpCtx.save();dpCtx.translate(10+sw*4,2+Math.abs(sw)*2);
+  dpCtx.fillStyle='#fff';dpCtx.strokeStyle=c;dpCtx.lineWidth=lw;
+  dpCtx.beginPath();dpCtx.roundRect(-3,-4,8,6,1);dpCtx.fill();dpCtx.stroke();
+  dpCtx.beginPath();dpCtx.moveTo(-1,-4);dpCtx.quadraticCurveTo(-1,-7,1,-7);dpCtx.lineTo(2,-7);dpCtx.quadraticCurveTo(4,-7,4,-4);dpCtx.stroke();
+  dpCtx.restore();
+  dpCtx.beginPath();dpCtx.moveTo(0,-2);dpCtx.lineTo(-9-sw*5,4+sw*2);dpCtx.stroke();
+  [[-2,-sw],[2,sw]].forEach(([bx,s])=>{
+    const kx=bx*2+s*6,ky=22,fx=bx+s*10,fy=36;
+    dpCtx.beginPath();dpCtx.moveTo(bx,10);dpCtx.lineTo(kx,ky);dpCtx.lineTo(fx,fy);dpCtx.stroke();
+    dpCtx.beginPath();dpCtx.moveTo(fx,fy);dpCtx.lineTo(fx+4,fy);dpCtx.stroke();
+  });
+  dpCtx.restore();
+}
+
+function dpClearTimers(){dpAnimTimers.forEach(clearTimeout);dpAnimTimers=[];if(dpSalesmanRaf){cancelAnimationFrame(dpSalesmanRaf);dpSalesmanRaf=null;}}
+
+function dpAnimatePath(path){
+  dpClearTimers();
+  let step=1;
+  function edgeFrame(){dpDraw(step);if(step<path.length){step++;dpAnimTimers.push(setTimeout(edgeFrame,260));}else dpWalkSalesman(path);}
+  edgeFrame();
+}
+function dpWalkSalesman(path){
+  let seg=0,t=0,phase=0;
+  function frame(){
+    if(seg>=path.length-1){dpDraw(path.length);return;}
+    const f=path[seg],to=path[seg+1];
+    const a=dpPX(f),b=dpPX(to);
+    const dx=b.x-a.x,dy=b.y-a.y,dist=Math.hypot(dx,dy);
+    if(dist<1){seg++;t=0;dpSalesmanRaf=requestAnimationFrame(frame);return;}
+    const speed=Math.max(0.008,0.012*200/dist);
+    t+=speed;phase+=0.2;
+    if(t>=1){t=0;seg++;phase=0;}
+    const ct=Math.min(t,1);
+    dpDraw(path.length,{x:a.x+dx*ct,y:a.y+dy*ct-20,phase});
+    dpSalesmanRaf=requestAnimationFrame(frame);
+  }
+  frame();
+}
+
+// Held-Karp DP
+function heldKarp(){
+  const INF=1e9,FULL=1<<dpN;
+  const dp=Array.from({length:FULL},()=>new Float64Array(dpN).fill(INF));
+  const par=Array.from({length:FULL},()=>new Int8Array(dpN).fill(-1));
+  const dpTrace=[]; // store states for display
+  dp[1][0]=0;
+  let states=0;
+  for(let S=1;S<FULL;S++){
+    if(!(S&1))continue;
+    for(let u=0;u<dpN;u++){
+      if(!(S&(1<<u))||dp[S][u]>=INF)continue;
+      states++;
+      for(let v=0;v<dpN;v++){
+        if(S&(1<<v))continue;
+        const ns=S|(1<<v),nc=dp[S][u]+dpCosts[u][v];
+        if(nc<dp[ns][v]){dp[ns][v]=nc;par[ns][v]=u;
+          if(dpTrace.length<80) dpTrace.push({S,u,v,ns,nc});
+        }
+      }
+    }
+  }
+  const fS=FULL-1;
+  let best=INF,last=-1;
+  for(let u=1;u<dpN;u++){if(dp[fS][u]<INF){const tc=dp[fS][u]+dpCosts[u][0];if(tc<best){best=tc;last=u;}}}
+  if(last<0)return null;
+  const path=[];let S=fS,cur=last;
+  while(cur!==-1){path.unshift(cur);const prev=par[S][cur];S^=(1<<cur);cur=prev;}
+  path.push(0);
+  return{cost:best,path,states,trace:dpTrace,dp,FULL};
+}
+
+function formatBitmask(S, n) {
+  let s='{';
+  for(let i=0;i<n;i++) if(S&(1<<i)) s+=(s.length>1?',':'')+NAMES[i];
+  return s+'}';
+}
+
+function dpSolve(){
+  if(dpSolving)return;
+  dpReadMatrix();dpSolving=true;
+  document.getElementById('dp-solve-btn').disabled=true;
+  document.getElementById('dp-results').classList.remove('on');
+  document.getElementById('dp-steps-wrap').style.display='none';
+  document.getElementById('dp-states-wrap').style.display='none';
+  dpSetStatus('running','Running Held–Karp dynamic programming…');
+
+  setTimeout(()=>{
+    const res=heldKarp();
+    dpSolving=false;
+    document.getElementById('dp-solve-btn').disabled=false;
+    if(!res){dpSetStatus('error','No valid tour — check costs are > 0.');return;}
+    dpOptPath=res.path;
+    dpSetStatus('done',`Optimal tour found · Cost = ${res.cost} · ${res.states.toLocaleString()} DP states`);
+
+    document.getElementById('dp-r-cost').textContent=res.cost;
+    document.getElementById('dp-r-hops').textContent=dpN+' + 1';
+    document.getElementById('dp-r-states').textContent=res.states.toLocaleString();
+
+    // Cost matrix display
+    let chtml='<tr><th></th>';
+    for(let j=0;j<dpN;j++) chtml+=`<th>${NAMES[j]}</th>`;
+    chtml+='</tr>';
+    for(let i=0;i<dpN;i++){
+      chtml+=`<tr><th>${NAMES[i]}</th>`;
+      for(let j=0;j<dpN;j++){
+        chtml+=i===j?`<td style="color:var(--ink4)">—</td>`:`<td>${dpCosts[i][j]}</td>`;
+      }
+      chtml+='</tr>';
+    }
+    document.getElementById('dp-cost-display').innerHTML=chtml;
+    document.getElementById('dp-steps-wrap').style.display='block';
+
+    // DP states table (show top states)
+    let shtml='<tr><th>Set S</th><th>City v</th><th>dp[S][v]</th><th>Via</th></tr>';
+    const FULL=1<<dpN;
+    let rowCount=0;
+    for(let S=1;S<FULL&&rowCount<60;S++){
+      if(!(S&1))continue;
+      for(let v=0;v<dpN;v++){
+        if(!(S&(1<<v))||res.dp[S][v]>=1e8)continue;
+        const inOpt=dpOptPath.includes(v)&&(S===(FULL-1));
+        shtml+=`<tr${inOpt?' class="highlight"':''}>
+          <td>${formatBitmask(S,dpN)}</td>
+          <td style="color:${PALETTE[v]};font-weight:500">${NAMES[v]}</td>
+          <td class="${inOpt?'opt-cell':''}">${Math.round(res.dp[S][v])}</td>
+          <td>—</td>
+        </tr>`;
+        rowCount++;
+      }
+    }
+    document.getElementById('dp-states-tbl').innerHTML=shtml;
+    document.getElementById('dp-states-wrap').style.display='block';
+
+    // Route chips
+    const ch=document.getElementById('dp-route-chips');ch.innerHTML='';
+    for(let k=0;k<dpOptPath.length;k++){
+      const c=dpOptPath[k];
+      const span=document.createElement('span');span.className='rc';
+      span.textContent=NAMES[c];
+      span.style.cssText=`background:${PALETTE[c]}12;border-color:${PALETTE[c]}50;color:${PALETTE[c]}`;
+      ch.appendChild(span);
+      if(k<dpOptPath.length-1){const a=document.createElement('span');a.className='ra';a.textContent='→';ch.appendChild(a);}
+    }
+
+    // Edge table
+    let ehtml='',run=0;
+    for(let k=0;k<dpOptPath.length-1;k++){
+      const f=dpOptPath[k],to=dpOptPath[k+1],c=dpCosts[f][to];run+=c;
+      ehtml+=`<tr><td style="color:${PALETTE[f]};font-weight:500">${NAMES[f]}</td><td style="color:#bbb">→</td><td style="color:${PALETTE[to]};font-weight:500">${NAMES[to]}</td><td style="color:#888">+${c}</td><td>= ${run}</td></tr>`;
+    }
+    ehtml+=`<tr class="tot"><td colspan="3">Total optimal cost</td><td></td><td>${res.cost}</td></tr>`;
+    document.getElementById('dp-edge-tbl').innerHTML=ehtml;
+    document.getElementById('dp-results').classList.add('on');
+    dpAnimatePath(res.path);
+  },50);
+}
+
+function dpClear(){dpClearTimers();dpOptPath=[];document.getElementById('dp-results').classList.remove('on');document.getElementById('dp-steps-wrap').style.display='none';document.getElementById('dp-states-wrap').style.display='none';dpSetStatus('idle','Cleared.');dpDraw();}
+function dpShuffle(){const p=0.12;dpPositions=Array.from({length:dpN},()=>({x:p+Math.random()*(1-2*p),y:p+Math.random()*(1-2*p)}));dpClear();dpDraw();}
+function dpReset(){dpClearTimers();dpOptPath=[];dpInitCosts(dpN,false);dpPositions=dpCirclePos(dpN);dpRenderMatrix();dpDraw();document.getElementById('dp-results').classList.remove('on');document.getElementById('dp-steps-wrap').style.display='none';document.getElementById('dp-states-wrap').style.display='none';dpSetStatus('idle','Reset complete.');}
+function dpSetStatus(type,msg){const b=document.getElementById('dp-status');b.className='status '+type;document.getElementById('dp-status-msg').textContent=msg;}
+
+function dpChangeN(d){
+  const nv=Math.max(3,Math.min(8,dpN+d));
+  if(nv===dpN)return;
+  dpReadMatrix();dpN=nv;
+  document.getElementById('dp-count-disp').textContent=dpN;
+  document.getElementById('dp-badge-n').textContent=dpN;
+  dpInitCosts(dpN,true);dpPositions=dpCirclePos(dpN);
+  dpClear();dpRenderMatrix();dpDraw();
+  dpSetStatus('idle',dpN+' cities set.');
+}
+
+function dpLoadPreset(t){
+  dpClearTimers();
+  if(t==='tri'){dpN=3;dpCosts=[[0,10,15],[10,0,20],[15,20,0]];}
+  else if(t==='sq'){dpN=4;dpCosts=[[0,10,15,20],[10,0,25,35],[15,25,0,30],[20,35,30,0]];}
+  else if(t==='p5'){dpN=5;dpCosts=[[0,12,29,22,13],[12,0,19,17,25],[29,19,0,14,21],[22,17,14,0,10],[13,25,21,10,0]];}
+  else{dpN=5;dpCosts=Array.from({length:5},(_,i)=>Array.from({length:5},(_,j)=>i===j?0:Math.floor(Math.random()*30)+5));}
+  document.getElementById('dp-count-disp').textContent=dpN;
+  document.getElementById('dp-badge-n').textContent=dpN;
+  dpPositions=dpCirclePos(dpN);dpClear();dpRenderMatrix();dpDraw();
+  dpSetStatus('idle','Preset loaded — press Solve.');
+}
+
+
+// ═══════════════════════════════════════════════════
+//  BRANCH AND BOUND SECTION
+// ═══════════════════════════════════════════════════
+
+let bbN = 4;
+let bbW = [];
+let bbE = [];
+let bbPositions = [];
+let bbOptPath = [];
+let bbOptCost = Infinity;
+let bbSolving = false;
+let bbAnimTimers = [];
+let bbSalesmanRaf = null;
+let bbTreeNodes = [];
+
+const bbCanvas = document.getElementById('bb-canvas');
+const bbCtx = bbCanvas.getContext('2d');
+let bbCW = 0, bbCH = 0;
+
+const TC = document.getElementById('tree-canvas');
+const TCX = TC.getContext('2d');
+
+function bbResize(){
+  const wrap=document.getElementById('bb-cvs-wrap');
+  const w=Math.max(wrap.clientWidth||400,200);
+  const h=Math.round(Math.max(280,Math.min(440,w*0.58)));
+  const dpr=window.devicePixelRatio||1;
+  bbCanvas.width=w*dpr;bbCanvas.height=h*dpr;
+  bbCanvas.style.width=w+'px';bbCanvas.style.height=h+'px';
+  bbCW=w;bbCH=h;
+  bbCtx.setTransform(dpr,0,0,dpr,0,0);
+  bbDraw();
+}
+
+function bbCirclePos(n){
+  return Array.from({length:n},(_,i)=>({x:0.5+0.37*Math.cos(2*Math.PI*i/n-Math.PI/2),y:0.5+0.37*Math.sin(2*Math.PI*i/n-Math.PI/2)}));
+}
+function bbPX(i){return{x:bbPositions[i].x*bbCW,y:bbPositions[i].y*bbCH};}
+
+function bbInitData(n,keepOld){
+  const oW=bbW,oE=bbE;
+  bbW=Array.from({length:n},(_,i)=>Array.from({length:n},(_,j)=>{
+    if(i===j)return 0;
+    if(keepOld&&oW[i]&&oW[i][j]!==undefined)return oW[i][j];
+    return Math.floor(Math.random()*20)+3;
+  }));
+  bbE=Array.from({length:n},(_,i)=>Array.from({length:n},(_,j)=>{
+    if(i===j)return false;
+    if(keepOld&&oE[i]&&oE[i][j]!==undefined)return oE[i][j];
+    return true;
+  }));
+}
+
+function bbRenderMatrix(){
+  const tbl=document.getElementById('bb-cost-tbl');
+  let h='<tr><th></th>';
+  for(let j=0;j<bbN;j++) h+=`<th class="ch">${NAMES[j]}</th>`;
+  h+='</tr>';
+  for(let i=0;i<bbN;i++){
+    h+=`<tr><th class="ch">${NAMES[i]}</th>`;
+    for(let j=0;j<bbN;j++){
+      if(i===j){h+=`<td class="diag">—</td>`;continue;}
+      const on=bbE[i][j];
+      h+=`<td><div class="cell-wrap">
+        <div class="edge-toggle${on?' on':''}" data-i="${i}" data-j="${j}" onclick="bbToggleEdge(${i},${j})"></div>
+        <input class="wt-inp" type="number" min="1" max="9999" value="${bbW[i][j]}" data-i="${i}" data-j="${j}" ${on?'':'disabled'}
+          oninput="bbW[+this.dataset.i][+this.dataset.j]=Math.max(1,parseInt(this.value)||1)"/>
+      </div></td>`;
+    }
+    h+='</tr>';
+  }
+  tbl.innerHTML=h;
+  bbUpdateLBInfo();
+}
+
+function bbToggleEdge(i,j){
+  bbE[i][j]=!bbE[i][j];
+  const tog=document.querySelector(`#bb-cost-tbl .edge-toggle[data-i="${i}"][data-j="${j}"]`);
+  if(tog) tog.classList.toggle('on',bbE[i][j]);
+  const inp=document.querySelector(`#bb-cost-tbl .wt-inp[data-i="${i}"][data-j="${j}"]`);
+  if(inp) inp.disabled=!bbE[i][j];
+  bbDraw();
+  bbUpdateLBInfo();
+}
+
+function bbReadMatrix(){
+  document.querySelectorAll('#bb-cost-tbl .wt-inp').forEach(el=>{
+    const i=+el.dataset.i,j=+el.dataset.j;
+    bbW[i][j]=Math.max(1,parseInt(el.value)||1);
+  });
+}
+
+function bbSymmetrize(){
+  bbReadMatrix();
+  for(let i=0;i<bbN;i++) for(let j=i+1;j<bbN;j++){bbW[j][i]=bbW[i][j];bbE[j][i]=bbE[i][j];}
+  bbRenderMatrix();
+}
+
+function bbUpdateLBInfo(){
+  const INF=1e9;
+  const cm=Array.from({length:bbN},(_,i)=>Array.from({length:bbN},(_,j)=>{
+    if(i===j)return INF;
+    return bbE[i][j]?bbW[i][j]:INF;
+  }));
+  const {mat,lb}=bbReduceMatrix(cm);
+  document.getElementById('init-lb-val').textContent=lb>=INF?'∞':lb;
+  // Show reduced matrix
+  let h='<tr><th></th>';
+  for(let j=0;j<bbN;j++) h+=`<th>${NAMES[j]}</th>`;
+  h+='</tr>';
+  for(let i=0;i<bbN;i++){
+    h+=`<tr><th style="color:var(--teal)">${NAMES[i]}</th>`;
+    for(let j=0;j<bbN;j++){
+      const v=mat[i][j];
+      h+=`<td style="${v>=INF?'color:var(--ink4)':v===0?'color:var(--teal);font-weight:600':''}">${v>=INF?'∞':v}</td>`;
+    }
+    h+='</tr>';
+  }
+  document.getElementById('reduced-mtx-tbl').innerHTML=h;
+}
+
+// Drag
+let bbDrag=-1;
+function bbEvXY(e){const r=bbCanvas.getBoundingClientRect();const s=e.touches?e.touches[0]:e;return{x:s.clientX-r.left,y:s.clientY-r.top};}
+function bbCityAt(x,y){for(let i=0;i<bbN;i++){const p=bbPX(i);if(Math.hypot(x-p.x,y-p.y)<18)return i;}return -1;}
+bbCanvas.addEventListener('mousedown',e=>{const{x,y}=bbEvXY(e);bbDrag=bbCityAt(x,y);});
+bbCanvas.addEventListener('touchstart',e=>{e.preventDefault();const{x,y}=bbEvXY(e);bbDrag=bbCityAt(x,y);},{passive:false});
+bbCanvas.addEventListener('mousemove',e=>{
+  const{x,y}=bbEvXY(e);
+  if(bbDrag>=0){bbPositions[bbDrag]={x:Math.max(0.06,Math.min(0.94,x/bbCW)),y:Math.max(0.06,Math.min(0.94,y/bbCH))};bbDraw();return;}
+  const c=bbCityAt(x,y);bbCanvas.style.cursor=c>=0?'grab':'crosshair';
+  showTip(e,c);
+});
+bbCanvas.addEventListener('touchmove',e=>{e.preventDefault();if(bbDrag<0)return;const{x,y}=bbEvXY(e);bbPositions[bbDrag]={x:Math.max(0.06,Math.min(0.94,x/bbCW)),y:Math.max(0.06,Math.min(0.94,y/bbCH))};bbDraw();},{passive:false});
+bbCanvas.addEventListener('mouseup',()=>bbDrag=-1);
+bbCanvas.addEventListener('touchend',()=>bbDrag=-1);
+bbCanvas.addEventListener('mouseleave',()=>{bbDrag=-1;hideTip();});
+
+function showTip(e,i){
+  const t=document.getElementById('tip');
+  if(i<0){hideTip();return;}
+  const parts=[];
+  for(let j=0;j<bbN;j++) if(j!==i&&bbE[i][j]) parts.push(`→${NAMES[j]}:${bbW[i][j]}`);
+  t.style.display='block';t.style.left=(e.clientX+14)+'px';t.style.top=(e.clientY-10)+'px';
+  t.innerHTML=`<span style="color:${PALETTE[i]};font-weight:600">${NAMES[i]}</span>  ${parts.join('  ')||'no edges'}`;
+}
+function hideTip(){document.getElementById('tip').style.display='none';}
+
+function bbDraw(pathUpTo,salesPos){
+  bbCtx.clearRect(0,0,bbCW,bbCH);
+  bbCtx.strokeStyle='rgba(0,0,0,0.03)';bbCtx.lineWidth=1;
+  for(let x=0;x<bbCW;x+=40){bbCtx.beginPath();bbCtx.moveTo(x,0);bbCtx.lineTo(x,bbCH);bbCtx.stroke();}
+  for(let y=0;y<bbCH;y+=40){bbCtx.beginPath();bbCtx.moveTo(0,y);bbCtx.lineTo(bbCW,y);bbCtx.stroke();}
+
+  const drawLen=pathUpTo!==undefined?pathUpTo:bbOptPath.length;
+
+  // Edges
+  for(let i=0;i<bbN;i++) for(let j=i+1;j<bbN;j++){
+    if(!bbE[i][j]&&!bbE[j][i])continue;
+    const a=bbPX(i),b=bbPX(j);
+    bbCtx.beginPath();bbCtx.moveTo(a.x,a.y);bbCtx.lineTo(b.x,b.y);
+    bbCtx.strokeStyle='rgba(0,0,0,0.07)';bbCtx.lineWidth=1;bbCtx.stroke();
+    const mx=(a.x+b.x)/2,my=(a.y+b.y)/2;
+    const dx=b.x-a.x,dy=b.y-a.y,len=Math.hypot(dx,dy);
+    if(len>0){const ox=-dy/len*11,oy=dx/len*11;bbCtx.font='9px JetBrains Mono,monospace';bbCtx.fillStyle='rgba(0,0,0,0.28)';bbCtx.textAlign='center';bbCtx.textBaseline='middle';bbCtx.fillText(bbW[i][j],mx+ox,my+oy);}
+  }
+
+  // Path
+  if(bbOptPath.length>1){
+    for(let k=0;k<drawLen-1&&k<bbOptPath.length-1;k++){
+      const f=bbOptPath[k],t=bbOptPath[k+1];
+      const a=bbPX(f),b=bbPX(t);
+      const dx=b.x-a.x,dy=b.y-a.y,len=Math.hypot(dx,dy);
+      if(len<1)continue;
+      bbCtx.setLineDash([]);
+      bbCtx.beginPath();bbCtx.moveTo(a.x,a.y);bbCtx.lineTo(b.x,b.y);
+      bbCtx.strokeStyle='rgba(201,168,76,0.18)';bbCtx.lineWidth=10;bbCtx.lineCap='round';bbCtx.stroke();
+      bbCtx.beginPath();bbCtx.moveTo(a.x,a.y);bbCtx.lineTo(b.x,b.y);
+      bbCtx.strokeStyle='#c9a84c';bbCtx.lineWidth=2.5;bbCtx.lineCap='round';bbCtx.stroke();
+      const tm=0.55,mx=a.x+dx*tm,my2=a.y+dy*tm,ux=dx/len,uy=dy/len,hw=4.5;
+      bbCtx.beginPath();bbCtx.moveTo(mx+uy*hw,my2-ux*hw);bbCtx.lineTo(mx+ux*9,my2+uy*9);bbCtx.lineTo(mx-uy*hw,my2+ux*hw);
+      bbCtx.fillStyle='#c9a84c';bbCtx.fill();
+      bbCtx.font='500 10px JetBrains Mono,monospace';bbCtx.fillStyle='#c9a84c';bbCtx.textAlign='center';bbCtx.textBaseline='middle';
+      bbCtx.fillText(bbW[f][t],mx-uy*14,my2+ux*14);
+    }
+  }
+
+  // Cities
+  for(let i=0;i<bbN;i++){
+    const p=bbPX(i),col=PALETTE[i];
+    const inPath=bbOptPath.length>1&&bbOptPath.slice(0,drawLen).includes(i);
+    const isStart=i===0,r=isStart?14:11;
+    if(inPath){bbCtx.beginPath();bbCtx.arc(p.x,p.y,r+7,0,2*Math.PI);bbCtx.fillStyle=col+'18';bbCtx.fill();}
+    bbCtx.beginPath();bbCtx.arc(p.x,p.y,r,0,2*Math.PI);
+    bbCtx.fillStyle=inPath?col:col+'66';bbCtx.fill();
+    bbCtx.strokeStyle='rgba(255,255,255,0.5)';bbCtx.lineWidth=1.5;bbCtx.stroke();
+    bbCtx.font=`600 ${isStart?12:10}px JetBrains Mono,monospace`;bbCtx.fillStyle='#fff';bbCtx.textAlign='center';bbCtx.textBaseline='middle';
+    bbCtx.fillText(NAMES[i],p.x,p.y);
+    bbCtx.font='400 10px Outfit,sans-serif';bbCtx.fillStyle=inPath?col:'rgba(100,100,100,0.65)';bbCtx.textAlign='center';bbCtx.textBaseline='top';
+    bbCtx.fillText('City '+NAMES[i],p.x,p.y+r+4);
+  }
+
+  if(salesPos) bbDrawSalesman(salesPos.x,salesPos.y,salesPos.phase);
+}
+
+function bbDrawSalesman(x,y,phase){
+  bbCtx.save();bbCtx.translate(x,y);
+  const c='#1d4a47',lw=1.8;
+  bbCtx.save();bbCtx.scale(1,0.3);bbCtx.translate(0,45);
+  const sg=bbCtx.createRadialGradient(0,0,0,0,0,12);
+  sg.addColorStop(0,'rgba(0,0,0,0.15)');sg.addColorStop(1,'rgba(0,0,0,0)');
+  bbCtx.fillStyle=sg;bbCtx.beginPath();bbCtx.ellipse(0,0,12,10,0,0,2*Math.PI);bbCtx.fill();bbCtx.restore();
+  const sw=Math.sin(phase)*0.35;
+  bbCtx.strokeStyle=c;bbCtx.lineWidth=lw;bbCtx.lineCap='round';
+  bbCtx.beginPath();bbCtx.moveTo(0,-6);bbCtx.lineTo(0,10);bbCtx.stroke();
+  bbCtx.beginPath();bbCtx.arc(0,-13,6.5,0,2*Math.PI);bbCtx.fillStyle='#fff';bbCtx.fill();bbCtx.strokeStyle=c;bbCtx.stroke();
+  bbCtx.fillStyle='#c9a84c';
+  bbCtx.beginPath();bbCtx.ellipse(0,-20,8.5,2.2,0,0,2*Math.PI);bbCtx.fill();
+  bbCtx.beginPath();bbCtx.moveTo(-5,-20);bbCtx.lineTo(-4,-29);bbCtx.lineTo(4,-29);bbCtx.lineTo(5,-20);bbCtx.closePath();bbCtx.fill();
+  bbCtx.save();bbCtx.translate(10+sw*4,2+Math.abs(sw)*2);
+  bbCtx.fillStyle='#fff';bbCtx.strokeStyle=c;bbCtx.lineWidth=lw;
+  bbCtx.beginPath();bbCtx.roundRect(-3,-4,8,6,1);bbCtx.fill();bbCtx.stroke();
+  bbCtx.beginPath();bbCtx.moveTo(-1,-4);bbCtx.quadraticCurveTo(-1,-7,1,-7);bbCtx.lineTo(2,-7);bbCtx.quadraticCurveTo(4,-7,4,-4);bbCtx.stroke();
+  bbCtx.restore();
+  bbCtx.beginPath();bbCtx.moveTo(0,-2);bbCtx.lineTo(-9-sw*5,4+sw*2);bbCtx.stroke();
+  [[-2,-sw],[2,sw]].forEach(([bx,s])=>{
+    const kx=bx*2+s*6,ky=22,fx=bx+s*10,fy=36;
+    bbCtx.beginPath();bbCtx.moveTo(bx,10);bbCtx.lineTo(kx,ky);bbCtx.lineTo(fx,fy);bbCtx.stroke();
+    bbCtx.beginPath();bbCtx.moveTo(fx,fy);bbCtx.lineTo(fx+4,fy);bbCtx.stroke();
+  });
+  bbCtx.restore();
+}
+
+function bbClearTimers(){bbAnimTimers.forEach(clearTimeout);bbAnimTimers=[];if(bbSalesmanRaf){cancelAnimationFrame(bbSalesmanRaf);bbSalesmanRaf=null;}}
+
+function bbAnimatePath(path){
+  bbClearTimers();let step=1;
+  function edgeFrame(){bbDraw(step);if(step<path.length){step++;bbAnimTimers.push(setTimeout(edgeFrame,260));}else bbWalkSalesman(path);}
+  edgeFrame();
+}
+function bbWalkSalesman(path){
+  let seg=0,t=0,phase=0;
+  function frame(){
+    if(seg>=path.length-1){bbDraw(path.length);return;}
+    const f=path[seg],to=path[seg+1];
+    const a=bbPX(f),b=bbPX(to);
+    const dx=b.x-a.x,dy=b.y-a.y,dist=Math.hypot(dx,dy);
+    if(dist<1){seg++;t=0;bbSalesmanRaf=requestAnimationFrame(frame);return;}
+    const speed=Math.max(0.008,0.012*200/dist);
+    t+=speed;phase+=0.2;
+    if(t>=1){t=0;seg++;phase=0;}
+    const ct=Math.min(t,1);
+    bbDraw(path.length,{x:a.x+dx*ct,y:a.y+dy*ct-20,phase});
+    bbSalesmanRaf=requestAnimationFrame(frame);
+  }
+  frame();
+}
+
+// Reduce matrix
+function bbReduceMatrix(mat){
+  const INF=1e9;
+  const m=mat.map(r=>[...r]);let lb=0;
+  for(let i=0;i<bbN;i++){let mn=Math.min(...m[i]);if(mn===INF||mn<=0)continue;lb+=mn;for(let j=0;j<bbN;j++)if(m[i][j]<INF)m[i][j]-=mn;}
+  for(let j=0;j<bbN;j++){let mn=INF;for(let i=0;i<bbN;i++)if(m[i][j]<mn)mn=m[i][j];if(mn===INF||mn<=0)continue;lb+=mn;for(let i=0;i<bbN;i++)if(m[i][j]<INF)m[i][j]-=mn;}
+  return{mat:m,lb};
+}
+
+function branchAndBound(){
+  const INF=1e9;
+  const cm=Array.from({length:bbN},(_,i)=>Array.from({length:bbN},(_,j)=>i===j?INF:(bbE[i][j]?bbW[i][j]:INF)));
+  const{mat:rMat,lb:initLB}=bbReduceMatrix(cm);
+  let bestCost=INF,bestPath=null,nodesExplored=0,idCounter=0;
+  bbTreeNodes=[];
+  function newNode(parentId,path,mat,lb,edgeLabel,pruned){
+    const id=idCounter++;
+    bbTreeNodes.push({id,parentId,path:[...path],lb,pruned:!!pruned,optimal:false,edgeLabel:edgeLabel||''});
+    return{id,path,mat,lb};
+  }
+  const root=newNode(-1,[0],rMat,initLB,'Start',false);
+  const queue=[{id:root.id,path:root.path,mat:rMat,lb:root.lb}];
+  while(queue.length>0){
+    queue.sort((a,b)=>a.lb-b.lb);
+    const cur=queue.shift();nodesExplored++;
+    if(cur.lb>=bestCost){bbTreeNodes[cur.id].pruned=true;continue;}
+    const visited=new Set(cur.path);
+    if(cur.path.length===bbN){
+      const last=cur.path[cur.path.length-1];
+      if(cur.mat[last][0]<INF&&bbE[last][0]){
+        let exact=0,feasible=true;
+        const fullPath=[...cur.path,0];
+        for(let k=0;k<fullPath.length-1;k++){if(!bbE[fullPath[k]][fullPath[k+1]]){feasible=false;break;}exact+=bbW[fullPath[k]][fullPath[k+1]];}
+        if(feasible&&exact<bestCost){bestCost=exact;bestPath=[...fullPath];bbTreeNodes.forEach(n=>n.optimal=false);bbTreeNodes[cur.id].optimal=true;}
+      }
+      continue;
+    }
+    const from=cur.path[cur.path.length-1];
+    for(let to=0;to<bbN;to++){
+      if(visited.has(to))continue;
+      if(cur.mat[from][to]>=INF)continue;
+      const childMat=cur.mat.map(r=>[...r]);
+      const edgeCost=childMat[from][to];
+      for(let k=0;k<bbN;k++){childMat[from][k]=INF;childMat[k][to]=INF;}
+      if(cur.path.length<bbN-1)childMat[to][0]=INF;
+      const{mat:nm,lb:addLB}=bbReduceMatrix(childMat);
+      const childLB=cur.lb+edgeCost+addLB;
+      const pruned=childLB>=bestCost;
+      const child=newNode(cur.id,[...cur.path,to],nm,childLB,`${NAMES[from]}→${NAMES[to]}`,pruned);
+      if(!pruned)queue.push({id:child.id,path:child.path,mat:nm,lb:child.lb});
+    }
+  }
+  return{cost:bestCost,path:bestPath,nodes:nodesExplored};
+}
+
+function drawTree(){
+  if(!bbTreeNodes.length)return;
+  const depths={};
+  bbTreeNodes.forEach(n=>{const d=n.path.length-1;if(!depths[d])depths[d]=[];depths[d].push(n);});
+  const maxDepth=Math.max(...Object.keys(depths).map(Number));
+  const nodeW=96,nodeH=56,xGap=14,yGap=70;
+  const maxNodes=Math.max(...Object.values(depths).map(a=>a.length));
+  const totalW=Math.max(720,maxNodes*(nodeW+xGap)+60);
+  const totalH=(maxDepth+1)*(nodeH+yGap)+60;
+  const dpr=window.devicePixelRatio||1;
+  TC.width=totalW*dpr;TC.height=totalH*dpr;
+  TC.style.width=totalW+'px';TC.style.height=totalH+'px';
+  TCX.setTransform(dpr,0,0,dpr,0,0);
+  const pos2={};
+  Object.entries(depths).forEach(([d,nodes])=>{
+    const count=nodes.length;
+    const totalRowW=count*(nodeW+xGap)-xGap;
+    const startX=(totalW-totalRowW)/2;
+    nodes.forEach((n,idx)=>{pos2[n.id]={x:startX+idx*(nodeW+xGap),y:+d*(nodeH+yGap)+30};});
+  });
+  TCX.clearRect(0,0,totalW,totalH);
+  // Draw edges
+  bbTreeNodes.forEach(n=>{
+    if(n.parentId<0)return;
+    const pp=pos2[n.parentId],cp=pos2[n.id];
+    if(!pp||!cp)return;
+    TCX.beginPath();TCX.moveTo(pp.x+nodeW/2,pp.y+nodeH);TCX.lineTo(cp.x+nodeW/2,cp.y);
+    TCX.strokeStyle=n.pruned?'rgba(220,38,38,0.3)':'rgba(29,74,71,0.2)';TCX.lineWidth=1.2;TCX.stroke();
+    const mx=(pp.x+cp.x)/2+nodeW/2,my=(pp.y+cp.y)/2+nodeH/2;
+    TCX.font='500 9px JetBrains Mono,monospace';
+    TCX.fillStyle=n.pruned?'#dc2626':'#7a7a72';
+    TCX.textAlign='center';TCX.textBaseline='middle';TCX.fillText(n.edgeLabel,mx,my);
+  });
+  // Draw nodes
+  bbTreeNodes.forEach(n=>{
+    const p=pos2[n.id];if(!p)return;
+    const{x,y}=p;
+    let bg='#fff',border='#e8e3d8',txtCol='#1a1a18';
+    if(n.pruned){bg='rgba(220,38,38,0.05)';border='rgba(220,38,38,0.4)';txtCol='#dc2626';}
+    else if(n.optimal){bg='rgba(201,168,76,0.08)';border='rgba(201,168,76,0.5)';txtCol='#1d4a47';}
+    TCX.beginPath();TCX.roundRect(x,y,nodeW,nodeH,7);TCX.fillStyle=bg;TCX.fill();TCX.strokeStyle=border;TCX.lineWidth=1;TCX.stroke();
+    const pathStr=n.path.map(i=>NAMES[i]).join('→');
+    TCX.font='500 10px JetBrains Mono,monospace';TCX.fillStyle=txtCol;TCX.textAlign='center';TCX.textBaseline='middle';
+    TCX.fillText(pathStr,x+nodeW/2,y+15);
+    const lbStr=n.lb>=1e8?'∞':'lb='+Math.round(n.lb);
+    TCX.font='400 9px JetBrains Mono,monospace';
+    TCX.fillStyle=n.pruned?'#dc2626':n.optimal?'#c9a84c':'#7a7a72';
+    TCX.textAlign='center';TCX.fillText(lbStr,x+nodeW/2,y+29);
+    if(n.pruned){TCX.font='12px sans-serif';TCX.fillStyle='#dc2626';TCX.textAlign='center';TCX.fillText('✗',x+nodeW/2,y+44);}
+    else if(n.optimal){TCX.font='12px sans-serif';TCX.fillStyle='#c9a84c';TCX.textAlign='center';TCX.fillText('★',x+nodeW/2,y+44);}
+  });
+}
+
+function bbSolve(){
+  if(bbSolving)return;
+  bbReadMatrix();bbSolving=true;
+  document.getElementById('bb-solve-btn').disabled=true;
+  document.getElementById('bb-results').classList.remove('on');
+  document.getElementById('tree-canvas-wrap').style.display='none';
+  document.getElementById('bb-no-sol').classList.remove('on');
+  bbSetStatus('running','Running Branch & Bound…');
+  setTimeout(()=>{
+    let res;
+    try{res=branchAndBound();}catch(err){
+      bbSolving=false;document.getElementById('bb-solve-btn').disabled=false;
+      bbSetStatus('error','Error: '+err.message);return;
+    }
+    bbSolving=false;document.getElementById('bb-solve-btn').disabled=false;
+    if(!res.path){bbSetStatus('error','No valid tour found.');document.getElementById('bb-no-sol').classList.add('on');return;}
+    bbOptPath=res.path;bbOptCost=res.cost;
+    bbSetStatus('done',`Optimal = ${bbOptCost} · ${bbTreeNodes.length} tree nodes · ${res.nodes} explored`);
+    document.getElementById('bb-r-cost').textContent=bbOptCost;
+    document.getElementById('bb-r-hops').textContent=bbN+' + 1';
+    document.getElementById('bb-r-nodes').textContent=bbTreeNodes.length;
+    // Route chips
+    const ch=document.getElementById('bb-route-chips');ch.innerHTML='';
+    bbOptPath.forEach((c,k)=>{
+      const s=document.createElement('span');s.className='rc';
+      s.textContent=NAMES[c];s.style.cssText=`background:${PALETTE[c]}12;border-color:${PALETTE[c]}50;color:${PALETTE[c]}`;
+      ch.appendChild(s);
+      if(k<bbOptPath.length-1){const a=document.createElement('span');a.className='ra';a.textContent='→';ch.appendChild(a);}
+    });
+    // Edge breakdown
+    let html='',run=0;
+    for(let k=0;k<bbOptPath.length-1;k++){
+      const f=bbOptPath[k],t=bbOptPath[k+1],c=bbW[f][t];run+=c;
+      html+=`<tr><td style="color:${PALETTE[f]};font-weight:500">${NAMES[f]}</td><td style="color:#bbb">→</td><td style="color:${PALETTE[t]};font-weight:500">${NAMES[t]}</td><td style="color:#888">+${c}</td><td>= ${run}</td></tr>`;
+    }
+    html+=`<tr class="tot"><td colspan="3">Total</td><td></td><td>${bbOptCost}</td></tr>`;
+    document.getElementById('bb-edge-tbl').innerHTML=html;
+    document.getElementById('bb-results').classList.add('on');
+    document.getElementById('tree-canvas-wrap').style.display='block';
+    drawTree();
+    bbAnimatePath(res.path);
+  },60);
+}
+
+function bbClear(){bbClearTimers();bbOptPath=[];bbOptCost=Infinity;bbTreeNodes=[];document.getElementById('bb-results').classList.remove('on');document.getElementById('tree-canvas-wrap').style.display='none';document.getElementById('bb-no-sol').classList.remove('on');bbSetStatus('idle','Cleared.');bbDraw();}
+function bbShuffle(){const p=0.12;bbPositions=Array.from({length:bbN},()=>({x:p+Math.random()*(1-2*p),y:p+Math.random()*(1-2*p)}));bbClear();bbDraw();}
+function bbReset(){bbClearTimers();bbOptPath=[];bbTreeNodes=[];bbInitData(bbN,false);bbPositions=bbCirclePos(bbN);bbRenderMatrix();bbDraw();document.getElementById('bb-results').classList.remove('on');document.getElementById('tree-canvas-wrap').style.display='none';document.getElementById('bb-no-sol').classList.remove('on');bbSetStatus('idle','Reset.');}
+function bbSetStatus(type,msg){document.getElementById('bb-status').className='status '+type;document.getElementById('bb-status-msg').textContent=msg;}
+
+function bbChangeN(d){
+  const nv=Math.max(3,Math.min(6,bbN+d));
+  if(nv===bbN)return;
+  bbReadMatrix();bbN=nv;
+  document.getElementById('bb-count-disp').textContent=bbN;
+  document.getElementById('bb-badge-n').textContent=bbN;
+  bbInitData(bbN,true);bbPositions=bbCirclePos(bbN);
+  bbClear();bbRenderMatrix();bbDraw();
+  bbSetStatus('idle',bbN+' cities set.');
+}
+
+function bbLoadPreset(t){
+  bbClearTimers();
+  if(t==='tri'){bbN=3;bbW=[[0,10,15],[10,0,20],[15,20,0]];bbE=[[false,true,true],[true,false,true],[true,true,false]];}
+  else if(t==='sq'){bbN=4;bbW=[[0,10,15,20],[10,0,25,35],[15,25,0,30],[20,35,30,0]];bbE=Array.from({length:4},(_,i)=>Array.from({length:4},(_,j)=>i!==j));}
+  else if(t==='p5'){bbN=5;bbW=[[0,3,1,5,8],[3,0,6,7,9],[1,6,0,4,2],[5,7,4,0,3],[8,9,2,3,0]];bbE=Array.from({length:5},(_,i)=>Array.from({length:5},(_,j)=>i!==j));}
+  else{bbN=5;bbW=Array.from({length:5},(_,i)=>Array.from({length:5},(_,j)=>i===j?0:Math.floor(Math.random()*25)+3));bbE=Array.from({length:5},(_,i)=>Array.from({length:5},(_,j)=>i!==j));}
+  document.getElementById('bb-count-disp').textContent=bbN;
+  document.getElementById('bb-badge-n').textContent=bbN;
+  bbPositions=bbCirclePos(bbN);bbClear();bbRenderMatrix();bbDraw();
+  bbSetStatus('idle','Preset loaded — press Solve!');
+}
+
+// ─── HERO MINI CANVAS ───────────────────────────────
+(function(){
+  const hc=document.getElementById('tsp-canvas-hero');
+  if(!hc)return;
+  const hctx=hc.getContext('2d');
+  const w=hc.parentElement.clientWidth||400;
+  const h=Math.round(w*0.55);
+  hc.width=w*(window.devicePixelRatio||1);hc.height=h*(window.devicePixelRatio||1);
+  hc.style.width=w+'px';hc.style.height=h+'px';
+  hctx.setTransform(window.devicePixelRatio||1,0,0,window.devicePixelRatio||1,0,0);
+  const HN=5;
+  const HPAL=['#c9a84c','#2a7a70','#a07830','#1d4a47','#3d8b82'];
+  const hpos=Array.from({length:HN},(_,i)=>({x:0.5+0.36*Math.cos(2*Math.PI*i/HN-Math.PI/2),y:0.5+0.36*Math.sin(2*Math.PI*i/HN-Math.PI/2)}));
+  const htour=[0,2,4,1,3,0];
+  function hpx(i){return{x:hpos[i].x*w,y:hpos[i].y*h};}
+  hctx.strokeStyle='rgba(255,255,255,0.04)';hctx.lineWidth=1;
+  for(let x=0;x<w;x+=32){hctx.beginPath();hctx.moveTo(x,0);hctx.lineTo(x,h);hctx.stroke();}
+  for(let y=0;y<h;y+=32){hctx.beginPath();hctx.moveTo(0,y);hctx.lineTo(w,y);hctx.stroke();}
+  for(let i=0;i<HN;i++) for(let j=i+1;j<HN;j++){
+    const a=hpx(i),b=hpx(j);
+    hctx.beginPath();hctx.moveTo(a.x,a.y);hctx.lineTo(b.x,b.y);
+    hctx.strokeStyle='rgba(255,255,255,0.07)';hctx.lineWidth=1;hctx.stroke();
+  }
+  for(let k=0;k<htour.length-1;k++){
+    const a=hpx(htour[k]),b=hpx(htour[k+1]);
+    hctx.beginPath();hctx.moveTo(a.x,a.y);hctx.lineTo(b.x,b.y);
+    hctx.strokeStyle='rgba(201,168,76,0.6)';hctx.lineWidth=1.5;hctx.lineCap='round';hctx.stroke();
+  }
+  for(let i=0;i<HN;i++){
+    const p=hpx(i),col=HPAL[i],r=i===0?10:8;
+    hctx.beginPath();hctx.arc(p.x,p.y,r+5,0,2*Math.PI);hctx.fillStyle=col+'20';hctx.fill();
+    hctx.beginPath();hctx.arc(p.x,p.y,r,0,2*Math.PI);hctx.fillStyle=col;hctx.fill();
+    hctx.font='600 9px JetBrains Mono,monospace';hctx.fillStyle='#fff';hctx.textAlign='center';hctx.textBaseline='middle';
+    hctx.fillText(NAMES[i],p.x,p.y);
+  }
+})();
+
+// Nav scroll
+window.addEventListener('scroll',()=>{
+  const secs=['visualizer','about','developers'];
+  const links=document.querySelectorAll('.nav-link');
+  let active=0;
+  secs.forEach((id,i)=>{const el=document.getElementById(id);if(el&&el.getBoundingClientRect().top<=80)active=i;});
+  links.forEach((l,i)=>l.classList.toggle('active',i===active));
+});
+
+// ─── INIT ─────────────────────────────────────────
+function init(){
+  // DP init
+  dpInitCosts(dpN,false);dpPositions=dpCirclePos(dpN);dpRenderMatrix();dpResize();
+  // BB init
+  bbInitData(bbN,false);bbPositions=bbCirclePos(bbN);bbRenderMatrix();bbResize();
+}
+init();
+</script>
+</body>
+</html>
